@@ -1,12 +1,17 @@
 # mario_collector
 ## 简介
-服务端GOSDK第一版
+服务端GOSDK第一版, APP端当天没有launch事件会导致无法写入离线表。
 ## SDK已支持功能
 - 支持数据批量上报
-
-
+- 自动补全DeviceId与WebId
+- 增加异常处理
  
 ## 使用方式
+### 修改配置信息
+```go
+//constant.go中，修改IP地址
+HttpAddr = "10.225.130.127"
+```
 ### 定义用户属性
 ```go
     user := &pb_event.User{
@@ -45,6 +50,7 @@
        UtmMedium:    proto.String(""),
        ClientIp:     proto.String("10.100.1.1"),
        Headers:      proto.String(string(jsonBytes)),
+    }
  ```
 ### 定义事件
 ```go
@@ -54,11 +60,16 @@
     params["group_id"] = 123
     paramsBytes, _ := json.Marshal(params)
     event := &pb_event.Event{
-       Event:  proto.String("test_go_detail"),//必选
+       Event:  proto.String("EVENT_NAME1"),//必选
        Time:   proto.Uint32(123),
        Params: proto.String(string(paramsBytes)),//必选
     }
-    var events = []*pb_event.Event{event}
+    event2 := &pb_event.Event{
+       Event:  proto.String("EVENT_NAME2"),//必选
+       Time:   proto.Uint32(123),
+       Params: proto.String(string(paramsBytes)),//必选
+    }
+    var events = []*pb_event.Event{event, event2}
  ```
 
 ### 移动端的数据上报
@@ -66,7 +77,7 @@
     //产生一个连接器。
     mcsCollector := NewAppCollector()
 	//上报数据
-    resp, err := mcsCollector.AppCollectEvents(user, header, events)
+    resp, err := mcsCollector.Collect(user, header, events)
 	if err == nil {
 		defer resp.Body.Close()                        // 保证连接复用
 		fmt.Println("response code:", resp.StatusCode) // 查看resp.StatusCode
@@ -82,7 +93,7 @@
 ```go
 //产生一个连接器。
 	mcsCollector := NewWebMpCollector()
-	resp, err := mcsCollector.WebCollectEvents(user, header, events)
+	resp, err := mcsCollector.Collect(user, header, events)
 	if err == nil {
 		defer resp.Body.Close()                        // 保证连接复用
 		fmt.Println("response code:", resp.StatusCode) // 查看resp.StatusCode
