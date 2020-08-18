@@ -4,11 +4,14 @@ import (
 	"code.byted.org/data/mario_collector/pb_event"
 	"code.byted.org/dp/mario_common/traceid"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,12 +21,24 @@ var (
 	dialTimeout         = 1 * time.Second
 	totalTimeout        = 2 * time.Second
 	maxIdleConnsPerHost = 4
+	logFileName = flag.String("log", "cServer.log", "Log file name")
+	logFile, _ = os.OpenFile(*logFileName, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+	Info = log.New(logFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Error = log.New(logFile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 )
 
 type McsCollector struct {
 	mscUrl        string
 	appKey        string
 	mscHttpClient *http.Client
+}
+
+type AppCollector struct {
+	McsCollector
+}
+
+type WebCollector struct {
+	McsCollector
 }
 
 func NewMcsCollector(mcsUrl string, appKey string) (collector *McsCollector) {
@@ -45,19 +60,38 @@ func NewMcsCollector(mcsUrl string, appKey string) (collector *McsCollector) {
 }
 
 //App上报的接口
-func NewAppCollector()(collector *McsCollector){
+func NewAppCollector() (collector *AppCollector) {
 	mcsurl := "http://"+HttpAddr+":31081"+AppURL
-	return NewMcsCollector(mcsurl, "")
+	collector = &AppCollector{
+		*NewMcsCollector(mcsurl,""),
+	}
+	return
 }
 
 //Web小程序上报的接口。
-func NewWebMpCollector()(collector *McsCollector){
+func NewWebMpCollector()(collector *WebCollector){
 	mcsurl := "http://"+HttpAddr+":31081"+WebURL
-	return NewMcsCollector(mcsurl, "")
+	collector = &WebCollector{
+		*NewMcsCollector(mcsurl,""),
+	}
+	return
 }
 
 
-func (this *McsCollector) WebCollectEvents(user *pb_event.User, header *pb_event.Header, events []*pb_event.Event) (*http.Response, error) {
+////App上报的接口
+//func NewAppCollector()(collector *McsCollector){
+//	mcsurl := "http://"+HttpAddr+":31081"+AppURL
+//	return NewMcsCollector(mcsurl, "")
+//}
+
+////Web小程序上报的接口。
+//func NewWebMpCollector()(collector *McsCollector){
+//	mcsurl := "http://"+HttpAddr+":31081"+WebURL
+//	return NewMcsCollector(mcsurl, "")
+//}
+
+
+func (this *WebCollector) Collect(user *pb_event.User, header *pb_event.Header, events []*pb_event.Event) (*http.Response, error) {
 	err:=checkSsid(user,header)
 	if err!=nil {
 		return nil,err
@@ -67,18 +101,23 @@ func (this *McsCollector) WebCollectEvents(user *pb_event.User, header *pb_event
 }
 
 
-func (this *McsCollector) AppCollectEvents( user *pb_event.User, header *pb_event.Header, events []*pb_event.Event) (*http.Response, error) {
+func (this *AppCollector) Collect( user *pb_event.User, header *pb_event.Header, events []*pb_event.Event) (_ *http.Response, err error) {
 	//app_id->aid.
 	//paras修改.
 	//headers  + deviceId
+	//var err error
+	//defer logger(err)
 	caller:= ""
 	//1.修改pras
 	//并增加datetime字段
 	if err:=MotifyMatchFormatForApp(user, header,events); err!=nil{
+		//Error.Println(err)
+		//logger(err)
 		return nil, err
 	}
 	//3 补全ssid
 	if err:=checkSsid(user, header); err!=nil{
+		//logger(err)
 		return nil,err
 	}
 
@@ -122,17 +161,20 @@ func (this *McsCollector) AppCollectEvents( user *pb_event.User, header *pb_even
 	}
 	data, err := json.Marshal(message)
 	if err != nil {
+		//logger(err)
 		return nil, err
 	}
-	fmt.Println(user.WebId)
-	fmt.Println(strings.NewReader(string(data)))
+	//fmt.Println(user.WebId)
+	//fmt.Println(strings.NewReader(string(data)))
 	req, err := http.NewRequest("POST", this.mscUrl, strings.NewReader(string(data)))
 	if err != nil {
+		//logger(err)
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	//req.Header.Set("X-MCS-AppKey", this.appKey)
 	resp, err := this.mscHttpClient.Do(req)
+	//logger(err)
 	return resp, err
 }
 
@@ -257,8 +299,8 @@ func checkSsid(user *pb_event.User, header *pb_event.Header)(error){
 			header.Web_id = proto.Uint64(0)
 		}
 	}
-	fmt.Print("SSID::: ")
-	println(*header.SsId)
+	//fmt.Print("SSID::: ")
+	//println(*header.SsId)
 	return nil
 }
 
@@ -277,23 +319,45 @@ func (this *McsCollector) McsCollectEvents(caller string, user *pb_event.User, h
 	}
 	data, err := json.Marshal(message)
 	if err != nil {
+		logger(err)
 		return nil, err
 	}
 	req, err := http.NewRequest("POST", this.mscUrl, strings.NewReader(string(data)))
 	if err != nil {
+		//logger(err)
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-MCS-AppKey", this.appKey)
+	//req.Header.Set("X-MCS-AppKey", this.appKey)
 	resp, err := this.mscHttpClient.Do(req)
+	//logger(err)
 	return resp, err
 }
 
-func (this *McsCollector) McsCollectEvent(caller string, user *pb_event.User, header *pb_event.Header, event *pb_event.Event) (*http.Response, error) {
-	return this.McsCollectEvents(caller, user, header, []*pb_event.Event{event})
+//func init() {
+//	runtime.GOMAXPROCS(runtime.NumCPU())
+//	flag.Parse()
+//	//set logfile Stdout
+//	logFile, logErr := os.OpenFile(*logFileName, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+//	if logErr != nil {
+//		fmt.Println("Fail to find", *logFile, "cServer start Failed")
+//		os.Exit(1)
+//	}
+//	log.SetOutput(logFile)
+//	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+//	//Info := log.New(logFile,
+//	//	"INFO: ",
+//	//	log.Ldate|log.Ltime|log.Lshortfile)
+//	//Info.Println("ceshiyixia")
+//	//write log
+//	//log.Printf("1111111111Server abort! Cause:%v \n", "test log file")
+//}
+
+func logger(err error){
+	print(err)
+	if err != nil{
+		Error.Println(err)
+	}else {
+		//Info.Println("没有错误")
+	}
 }
-
-
-
-
-
