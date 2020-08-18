@@ -699,6 +699,7 @@ type Event struct {
 
 	Datetime      	 *string `protobuf:"bytes,3,req,name=event" json:"datetime,omitempty"`
 	UserId      	 *string `protobuf:"bytes,3,req,name=event" json:"user_id,omitempty"`
+	Localtime_ms      *uint64 `protobuf:"bytes,3,req,name=event" json:"localtime_ms,omitempty"`
 }
 
 func (m *Event) Reset()         { *m = Event{} }
@@ -770,6 +771,24 @@ type MarioEvents struct {
 	TraceId          *string  `protobuf:"bytes,6,opt,name=trace_id" json:"trace_id,omitempty"`
 	XXX_unrecognized []byte   `json:"-"`
 	AppEvents        []*Event `protobuf:"bytes,5,rep,name=events" json:"event_v3,omitempty"`
+	Launchs        		[]*Launch ` json:"launch,omitempty"`
+	Terminates        []*Terminate `json:"terminate,omitempty"`
+
+}
+
+type Launch struct{
+	Datetime 			*string `json:"datetime,omitempty"`
+	Localtime_ms      	*uint64 `json:"local_time_ms,omitempty"`
+	SessionId        	*string `json:"session_id,omitempty"`
+	TeaEvent      		*uint64 `json:"tea_event_index,omitempty"`
+}
+
+type Terminate struct{
+	Datetime 			*string `json:"datetime,omitempty"`
+	Localtime_ms      	*uint64 `json:"local_time_ms,omitempty"`
+	SessionId        	*string `json:"session_id,omitempty"`
+	TeaEvent      		*uint64 `json:"tea_event_index,omitempty"`
+	Duration        	*uint64 `json:"duration,omitempty"`
 }
 
 func (m *MarioEvents) Reset()         { *m = MarioEvents{} }
