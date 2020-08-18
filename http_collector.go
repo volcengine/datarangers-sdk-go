@@ -45,15 +45,15 @@ func NewMcsCollector(mcsUrl string, appKey string) (collector *McsCollector) {
 }
 
 //App上报的接口
-func NewAppCollector(appKey string)(collector *McsCollector){
+func NewAppCollector()(collector *McsCollector){
 	mcsurl := "http://"+HttpAddr+":31081"+AppURL
-	return NewMcsCollector(mcsurl, appKey)
+	return NewMcsCollector(mcsurl, "")
 }
 
 //Web小程序上报的接口。
-func NewWebMpCollector(appKey string)(collector *McsCollector){
+func NewWebMpCollector()(collector *McsCollector){
 	mcsurl := "http://"+HttpAddr+":31081"+WebURL
-	return NewMcsCollector(mcsurl, appKey)
+	return NewMcsCollector(mcsurl, "")
 }
 
 
@@ -65,7 +65,6 @@ func (this *McsCollector) WebCollectEvents(user *pb_event.User, header *pb_event
 	caller :=""
 	return this.McsCollectEvents(caller, user, header, events);
 }
-
 
 
 func (this *McsCollector) AppCollectEvents( user *pb_event.User, header *pb_event.Header, events []*pb_event.Event) (*http.Response, error) {
@@ -83,7 +82,33 @@ func (this *McsCollector) AppCollectEvents( user *pb_event.User, header *pb_even
 		return nil,err
 	}
 
-	//4  -> event_v3修改
+	//4. 构造对应的 launch 和 terminal 。
+	//launchtimeObj := time.Unix(time.Now().Unix()-5, 0)
+	//launchdatetime := proto.String(launchtimeObj.Format("2006-01-02 15:04:05"));
+	//launchlocalTimeMs := proto.Uint64(uint64((time.Now().Unix()-5)*1000))
+	//launch:=&pb_event.Launch{
+	//	Datetime: launchdatetime,
+	//	Localtime_ms: launchlocalTimeMs,
+	//	SessionId: events[0].SessionId,
+	//	TeaEvent: proto.Uint64(153507),
+	//}
+	//launchevents:=[]*pb_event.Launch{launch}
+	//
+	//
+	//timeObj := time.Unix(time.Now().Unix()+1000, 0)
+	//datetime := proto.String(timeObj.Format("2006-01-02 15:04:05"));
+	//localTimeMs := proto.Uint64(uint64((time.Now().Unix()+1000)*1000))
+	//terminal:=&pb_event.Terminate{
+	//	Datetime: datetime,
+	//	Localtime_ms: localTimeMs,
+	//	SessionId: events[0].SessionId,
+	//	TeaEvent: proto.Uint64(23432),
+	//	Duration: proto.Uint64(1213),
+	//}
+	//terminalevents:=[]*pb_event.Terminate{terminal}
+
+	//5  -> event_v3修改
+	//增加launch
 	ts := uint32(time.Now().Unix())
 	message := &pb_event.MarioEvents{
 		Caller:     &caller,
@@ -92,6 +117,8 @@ func (this *McsCollector) AppCollectEvents( user *pb_event.User, header *pb_even
 		Header:     header,
 		AppEvents:  events,
 		TraceId:    proto.String(traceid.NewTraceId()),
+		//Launchs: 	launchevents,
+		//Terminates: terminalevents,
 	}
 	data, err := json.Marshal(message)
 	if err != nil {
@@ -111,9 +138,10 @@ func (this *McsCollector) AppCollectEvents( user *pb_event.User, header *pb_even
 
 
 func MotifyMatchFormatForApp(user *pb_event.User, header *pb_event.Header, events []*pb_event.Event) error{
-	if user.WebId == nil {
-		user.WebId = proto.Uint64(123456789)
-	}
+
+	//if user.WebId == nil {
+	//	user.WebId = proto.Uint64(123456789)
+	//}
 
 	for _, event:=range events{
 		var par = make(map[string]interface{})
@@ -128,12 +156,15 @@ func MotifyMatchFormatForApp(user *pb_event.User, header *pb_event.Header, event
 			}
 		}
 		//根据time字段修改时间
-		if event.Time == nil {
+		if event.LocalTimeMs == nil {
 			timeObj := time.Unix(time.Now().Unix(), 0)
 			event.Datetime = proto.String(timeObj.Format("2006-01-02 15:04:05"));
+			event.LocalTimeMs = proto.Uint64(uint64(time.Now().Unix()*1000))
+			event.Localtime_ms = proto.Uint64(uint64(time.Now().Unix()*1000))
 		} else{
 			timeObj := time.Unix(int64(*event.Time), 0)
 			event.Datetime = proto.String(timeObj.Format("2006-01-02 15:04:05"));
+			event.Localtime_ms = event.LocalTimeMs
 		}
 		//添加user ID
 		event.UserId = proto.String(strconv.FormatUint(*user.UserId, 10))
@@ -176,13 +207,13 @@ func checkSsid(user *pb_event.User, header *pb_event.Header)(error){
 	}
 	if header.SsId == nil {
 		var webid *string;
-		if user.WebId == nil{
-			a := "123456789";
-			webid = &a;
-		}else{
-			a := strconv.FormatUint(*user.WebId, 10);
-			webid = &a;
-		}
+		//if user.WebId == nil{
+		//	a := "123456789";
+		//	webid = &a;
+		//}else{
+		//	a := strconv.FormatUint(*user.WebId, 10);
+		//	webid = &a;
+		//}
 		if user.Ssid == nil{
 			tt := &map[string]interface{}{
 				"app_id":header.AppId,
@@ -222,8 +253,9 @@ func checkSsid(user *pb_event.User, header *pb_event.Header)(error){
 			}
 		}
 		header.SsId = user.Ssid;
-		header.Web_id = user.WebId
-		//header.Web_id = proto.Uint64(0)
+		if user.WebId == nil{
+			header.Web_id = proto.Uint64(0)
+		}
 	}
 	fmt.Print("SSID::: ")
 	println(*header.SsId)
@@ -260,4 +292,8 @@ func (this *McsCollector) McsCollectEvents(caller string, user *pb_event.User, h
 func (this *McsCollector) McsCollectEvent(caller string, user *pb_event.User, header *pb_event.Header, event *pb_event.Event) (*http.Response, error) {
 	return this.McsCollectEvents(caller, user, header, []*pb_event.Event{event})
 }
+
+
+
+
 
