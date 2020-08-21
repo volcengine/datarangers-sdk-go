@@ -82,7 +82,7 @@ LOGPATH = "kkkk.log"
     client := NewAppCollector()
 	//上报数据
     resp, err := client.collect(user, header, events)
-//resp, err := client.collect(user, header, event2) //单个上报
+    //resp, err := client.collect(user, header, event2) //单个上报
 	if err == nil {
 		defer resp.Body.Close()                        // 保证连接复用
 		fmt.Println("response code:", resp.StatusCode) // 查看resp.StatusCode
@@ -95,10 +95,10 @@ LOGPATH = "kkkk.log"
 
 ### Web端、小程序端的数据上报
 ```go
-//产生一个连接器。
+    //产生一个连接器。
 	client := NewWebMpCollector()
 	resp, err := client.collect(user, header, events)
-//  resp, err := client.collect(user, header, event2) //单个数据上报
+    //  resp, err := client.collect(user, header, event2) //单个数据上报
 	if err == nil {
 		defer resp.Body.Close()                        // 保证连接复用
 		fmt.Println("response code:", resp.StatusCode) // 查看resp.StatusCode
