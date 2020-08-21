@@ -1,16 +1,14 @@
 package mario_collector
 
 import (
-	"code.byted.org/data/mario_collector/pb_event"
+	"code.byted.org/data/datarangers-sdk-go/pb_event"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"testing"
 )
-/**
 
- */
 var user = &pb_event.User{
 	UserUniqueId: proto.String("uuid"),
 //	UserType:     proto.Uint32(12),

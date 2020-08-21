@@ -1,8 +1,7 @@
 package mario_collector
 
 import (
-	"code.byted.org/data/mario_collector/pb_event"
-	"code.byted.org/dp/mario_common/traceid"
+	"code.byted.org/data/datarangers-sdk-go/pb_event"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"
@@ -145,7 +144,6 @@ func (this *AppCollector) collectEvents( user *pb_event.User, header *pb_event.H
 		User:       user,
 		Header:     header,
 		AppEvents:  events,
-		TraceId:    proto.String(traceid.NewTraceId()),
 	}
 	data, err := json.Marshal(message)
 	if err != nil {
@@ -234,7 +232,6 @@ func (this *McsCollector) McsCollectEvents(caller string, user *pb_event.User, h
 		User:       user,
 		Header:     header,
 		Events:     events,
-		TraceId:    proto.String(traceid.NewTraceId()),
 	}
 	data, err := json.Marshal(message)
 	if err != nil {
