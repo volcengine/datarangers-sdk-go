@@ -1,7 +1,12 @@
 package mario_collector
 
-var(
+const (
+	//net setting
 	HttpAddr = "10.225.130.127"
 	AppURL = "/service/2/app_log"
 	WebURL = "/v2/event/json"
+
+	//log setting
+	ISLOG = true
+	LOGPATH = "kkkk.log"
 )
