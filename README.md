@@ -2,15 +2,19 @@
 ## 简介
 服务端GOSDK第一版, APP端当天没有launch事件会导致无法写入离线表。
 ## SDK已支持功能
-- 支持数据批量上报
-- 自动补全DeviceId与WebId
-- 增加异常处理
+- 支持数据单个、批量上报
+- 自动补全DeviceId与SSID[已删除]
+- 可配置的事件日志
+- 异常抛出
  
 ## 使用方式
 ### 修改配置信息
 ```go
 //constant.go中，修改IP地址
 HttpAddr = "10.225.130.127"
+//选择是否记录事件日志以及日志位置
+ISLOG = true
+LOGPATH = "kkkk.log"
 ```
 ### 定义用户属性
 ```go
@@ -75,9 +79,10 @@ HttpAddr = "10.225.130.127"
 ### 移动端的数据上报
 ```go
     //产生一个连接器。
-    mcsCollector := NewAppCollector()
+    client := NewAppCollector()
 	//上报数据
-    resp, err := mcsCollector.Collect(user, header, events)
+    resp, err := client.collect(user, header, events)
+//resp, err := client.collect(user, header, event2) //单个上报
 	if err == nil {
 		defer resp.Body.Close()                        // 保证连接复用
 		fmt.Println("response code:", resp.StatusCode) // 查看resp.StatusCode
@@ -88,12 +93,12 @@ HttpAddr = "10.225.130.127"
 	}
 ```
 
-
 ### Web端、小程序端的数据上报
 ```go
 //产生一个连接器。
-	mcsCollector := NewWebMpCollector()
-	resp, err := mcsCollector.Collect(user, header, events)
+	client := NewWebMpCollector()
+	resp, err := client.collect(user, header, events)
+//  resp, err := client.collect(user, header, event2) //单个数据上报
 	if err == nil {
 		defer resp.Body.Close()                        // 保证连接复用
 		fmt.Println("response code:", resp.StatusCode) // 查看resp.StatusCode
