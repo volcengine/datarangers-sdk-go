@@ -9,12 +9,13 @@
  
 ## 使用方式
 ### 修改配置信息
+项目目录下创建conf.yml文件，用户自己选择性配置
 ```go
-//constant.go中，修改IP地址
-HttpAddr = "10.225.130.127"
 //选择是否记录事件日志以及日志位置
-ISLOG = true
-LOGPATH = "kkkk.log"
+islog: true
+path: hahah.log
+//上报的IP地址
+httpaddr: 10.225.130.127
 ```
 ### 定义用户属性
 ```go
