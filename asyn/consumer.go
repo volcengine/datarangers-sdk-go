@@ -1,11 +1,10 @@
-package asyn
+package mario_collector
 
 import (
 	"bufio"
 	mario_collector "code.byted.org/data/datarangers-sdk-go"
-	"code.byted.org/data/datarangers-sdk-go/pb_event"
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
+	"encoding/json"
 	"io"
 	"os"
 	"strconv"
@@ -14,49 +13,45 @@ import (
 	"time"
 )
 
-type consumer struct{
-	max int
-	tickets chan *ticket
-	reader []*os.File
-	ans int32
-	oknum int32
-	failnum int32
+type consumer struct {
+	max      int
+	tickets  chan *ticket
+	reader   []*os.File
+	ans      int32
+	oknum    int32
+	failnum  int32
 	register *register
 }
 
-type mess struct {
-	User *pb_event.User `json:"user,omitempty"`
-	Event *pb_event.Event `json:"event,omitempty"`
-	Header *pb_event.Header `json:"header,omitempty"`
-}
-
 type messList struct {
-	User *pb_event.User `json:"user,omitempty"`
-	Event []*pb_event.Event `json:"event,omitempty"`
-	Header *pb_event.Header `json:"header,omitempty"`
+	User   *mario_collector.User    `json:"user,omitempty"`
+	Event  []*mario_collector.Event `json:"event,omitempty"`
+	Header *mario_collector.Header  `json:"header,omitempty"`
 }
 
-func NewConsumer(x int)(*consumer,error){
-	c:=&consumer{ans : 0}
+func NewConsumer(x int) (*consumer, error) {
+	c := &consumer{ans: 0}
 	c.max = x
 	c.tickets = make(chan *ticket, c.max)
 	for i := 0; i < c.max; i++ {
-		c.tickets <- &ticket{ id : i}
+		c.tickets <- &ticket{id: i}
 		logFile, err := os.OpenFile("./bak/test"+strconv.Itoa(i), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-		if err!=nil { return nil,err}
+		if err != nil {
+			return nil, err
+		}
 		c.reader = append(c.reader, logFile)
 	}
 
 	c.register = &register{max: x}
 	var err error
-	if c.register.writer,err = os.OpenFile("./bak/register", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666); err!=nil{
+	if c.register.writer, err = os.OpenFile("./bak/register", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666); err != nil {
 		return nil, err
 	}
 
 	//先初始化
 	if len(c.register.offset) != c.max {
 		c.register.offset = []uint32{}
-		for i:=0;i<c.max; i++{
+		for i := 0; i < c.max; i++ {
 			c.register.offset = append(c.register.offset, 0)
 		}
 	}
@@ -69,49 +64,49 @@ func NewConsumer(x int)(*consumer,error){
 		if err == io.EOF {
 			break
 		}
-		err = jsoniter.Unmarshal([]byte(line), &tmp)
-		if err!=nil {
+		err = json.Unmarshal([]byte(line), &tmp)
+		if err != nil {
 			fmt.Println(err)
 		}
 
-		for k,v := range tmp{
+		for k, v := range tmp {
 			c.register.offset[k] = v
 		}
 	}
 
 	//初始化
-	for i:=0;i<c.max; i++{
+	for i := 0; i < c.max; i++ {
 		c.register.preset = append(c.register.preset, 0)
 	}
-	return c,nil
+	return c, nil
 }
 
-func (this * consumer) execute(isEvent bool){
+func (this *consumer) execute() {
 	//采集线程，
-	for i:=0; i<this.max; i++{
-		go this.collcet(i,isEvent)
+	for i := 0; i < this.max; i++ {
+		go this.collcet(i)
 	}
 
 	//写入offset, 更新offset ，
-	//go this.register.writeOffset()
+	go this.register.writeOffset()
 }
 
-type register struct{
+type register struct {
 	max int
 	//下一个记录的起点。
-	offset []uint32
-	preset []uint32
-	writer *os.File
+	offset   []uint32
+	preset   []uint32
+	writer   *os.File
 	complete bool
 }
 
-func (this *consumer) collcet(j int, isEvent bool){
+func (this *consumer) collcet(j int) {
 	br := bufio.NewReader(this.reader[j])
-	client,_ := mario_collector.NewAppCollector()
+	client, _ := mario_collector.NewAppCollector()
 	offset := this.register.offset[j]
 	var k uint32
 	count := 0
-	for k = 0 ; k<offset; k++ {
+	for k = 0; k < offset; k++ {
 		br.ReadLine()
 		count += 1
 	}
@@ -120,68 +115,50 @@ func (this *consumer) collcet(j int, isEvent bool){
 		if c == io.EOF {
 			break
 		}
-		var tmp mess
 		var tmpList messList
-		if isEvent{
-			if err:=jsoniter.Unmarshal(a,&tmp);err!=nil{
-				fmt.Println(err)
-			}
-			resp, err := client.Collect(tmp.User, tmp.Header, tmp.Event)
-			if err == nil {
-				defer resp.Body.Close()                             // 保证连接复用
-				//fmt.Println("response code:", resp.StatusCode) // 查看resp.StatusCode
-				//body, _ := ioutil.ReadAll(resp.Body)
-				//fmt.Println(string(body)) // 查看resp.Body
-				atomic.AddInt32(&this.oknum, 1)
-			}else{
-				fmt.Println(err)
-				atomic.AddInt32(&this.failnum, 1)
-			}
-		}else {
-			//List的 处理方式
-			if err:=jsoniter.Unmarshal(a,&tmpList);err!=nil{
-				fmt.Println(err)
-			}
-			resp, err := client.Collect(tmpList.User, tmpList.Header, tmpList.Event)
-			if err == nil {
-				defer resp.Body.Close()                             // 保证连接复用
-				//fmt.Println("response code:", resp.StatusCode) // 查看resp.StatusCode
-				//body, _ := ioutil.ReadAll(resp.Body)
-				//fmt.Println(string(body)) // 查看resp.Body
-				atomic.AddInt32(&this.oknum, 1)
-			}else{
-				fmt.Println(err)
-				atomic.AddInt32(&this.failnum, 1)
-			}
+		if err := json.Unmarshal(a, &tmpList); err != nil {
+			fmt.Println(err)
+		}
+		resp, err := client.Collect(tmpList.User, tmpList.Header, tmpList.Event)
+		if err == nil {
+			defer resp.Body.Close() // 保证连接复用
+			//fmt.Println("response code:", resp.StatusCode) // 查看resp.StatusCode
+			//body, _ := ioutil.ReadAll(resp.Body)
+			//fmt.Println(string(body)) // 查看resp.Body
+			atomic.AddInt32(&this.oknum, 1)
+		} else {
+			fmt.Println(err)
+			atomic.AddInt32(&this.failnum, 1)
 		}
 		count += 1
 		this.register.offset[j] = uint32(count)
 	}
-	fmt.Println("遍历了 %d 行", count)
+	fmt.Println("遍历了行", count)
 	atomic.AddInt32(&this.ans, 1)
 }
 
 //写个json 进去。
-func (this *register) writeOffset(){
+func (this *register) writeOffset() {
 	ans := map[int]uint32{}
 	for {
-		for i:=0 ;i< len(this.offset); i++{
+		for i := 0; i < len(this.offset); i++ {
 			//清零。
 			ans[i] = this.offset[i]
-			data,_ := jsoniter.Marshal(ans)
+			data, _ := json.Marshal(ans)
 			this.writer.Truncate(0)
 			this.writer.Write(data)
 			this.writer.WriteString("\n")
 		}
 		//复制
-		for i, _ := range this.offset{
+		for i, _ := range this.offset {
 			this.preset[i] = this.offset[i]
 		}
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 		if this.iscomplete() {
 			fmt.Println(" - 写入结束 - ")
+			this.complete = true
 			break
-		}else{
+		} else {
 			fmt.Println(" - 持续写入中 - ")
 		}
 
@@ -189,9 +166,9 @@ func (this *register) writeOffset(){
 }
 
 //两次一样则认为 已经结束。
-func (this *register) iscomplete()bool{
-	for i, _ := range this.offset{
-		if this.preset[i]!= this.offset[i]{
+func (this *register) iscomplete() bool {
+	for i, _ := range this.offset {
+		if this.preset[i] != this.offset[i] {
 			return false
 		}
 	}

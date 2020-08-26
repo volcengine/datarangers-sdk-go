@@ -1,4 +1,4 @@
-package asyn
+package mario_collector
 
 const (
 	//net setting
@@ -9,5 +9,5 @@ const (
 	//log setting
 	ISLOG = false
 
-	GoRouNum = 1
+	GoRouNum = 4
 )
