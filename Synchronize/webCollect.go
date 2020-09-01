@@ -6,26 +6,32 @@ import (
 	"github.com/golang/protobuf/proto"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
+
+var webonce sync.Once
 
 type webCollector struct {
 	mcsCollector
 }
 
-func WebCollect(appid uint32, uuid string, eventname string, eventParam map[string]interface{}) (*http.Response, error) {
+func WebCollect(appid uint32, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) (rep *http.Response, err error) {
 	if isFirst {
-		var err error
-		//if err = initL(); err != nil {
-		//	return nil, err
-		//}
-		if appcollector, err = newAppCollector(); err != nil {
-			return nil, err
+		firstLock.Lock()
+		if isFirst {
+			if err = initConfig(); err != nil {
+				return nil, err
+			}
+			if appcollector, err = newAppCollector(); err != nil {
+				return nil, err
+			}
+			if webcollector, err = newWebMpCollector(); err != nil {
+				return nil, err
+			}
+			isFirst = false
 		}
-		if webcollector, err = newWebMpCollector(); err != nil {
-			return nil, err
-		}
-		isFirst = false
+		firstLock.Unlock()
 	}
 
 	var user1 = &user{
@@ -33,8 +39,8 @@ func WebCollect(appid uint32, uuid string, eventname string, eventParam map[stri
 	}
 
 	var header1 = &header{
-		AppId: proto.Uint32(appid), //tob产品使用appkey进行上报，appId设置为0即可
-		//Custom: proto.String(""),
+		AppId:    proto.Uint32(appid), //tob产品使用appkey进行上报，appId设置为0即可
+		Custom:   custom,
 		Timezone: proto.Int32(8),
 	}
 
@@ -47,15 +53,14 @@ func WebCollect(appid uint32, uuid string, eventname string, eventParam map[stri
 }
 
 //Web小程序上报的接口。
-func newWebMpCollector() (collector *webCollector, err error) {
-	//if err = initL(); err != nil {
-	//	return nil, err
-	//}
-	mcsurl := "http://" + httpAddr + ":31081" + webURL
-	collector = &webCollector{
-		*newMcsCollector(mcsurl, ""),
-	}
-	return
+func newWebMpCollector() (*webCollector, error) {
+	webonce.Do(func() {
+		mcsurl := "http://" + syncConfIns.HttpConfig.HttpAddr + ":31081" + webURL
+		webcollector = &webCollector{
+			*newMcsCollector(mcsurl, ""),
+		}
+	})
+	return webcollector, nil
 }
 
 //事件上报
@@ -106,9 +111,8 @@ func (this *mcsCollector) mcsCollectEvents(caller string, user *user, header *he
 		//logger(err)
 		return nil, err
 	}
-	if iSLOG {
+	if syncConfIns.EventlogConfig.Islog {
 		logger.Println(string(data))
-		//println("web")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := this.mscHttpClient.Do(req)
