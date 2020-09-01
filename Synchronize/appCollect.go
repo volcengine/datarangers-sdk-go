@@ -13,19 +13,37 @@ type appCollector struct {
 	mcsCollector
 }
 
-func AppCollect(appid uint32, uuid string, eventname string, eventParam map[string]interface{}) (*http.Response, error) {
+func AppCollect(appid uint32, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) (resp *http.Response, err error) {
+	defer func() {
+		if err != nil {
+			data, _ := json.Marshal(&eventParam)
+			logmap := map[string]interface{}{
+				"appid":      appid,
+				"uuid":       uuid,
+				"eventname":  eventname,
+				"eventparam": string(data),
+			}
+			data2, _ := json.Marshal(&logmap)
+			fmt.Println("[ERROR]" + string(data2) + "err: " + err.Error())
+
+		}
+	}()
+
 	if isFirst {
-		var err error
-		if err = initL(); err != nil {
-			return nil, err
+		firstLock.Lock()
+		if isFirst {
+			if err = initConfig(); err != nil {
+				return nil, err
+			}
+			if appcollector, err = newAppCollector(); err != nil {
+				return nil, err
+			}
+			if webcollector, err = newWebMpCollector(); err != nil {
+				return nil, err
+			}
+			isFirst = false
 		}
-		if appcollector, err = newAppCollector(); err != nil {
-			return nil, err
-		}
-		if webcollector, err = newWebMpCollector(); err != nil {
-			return nil, err
-		}
-		isFirst = false
+		firstLock.Unlock()
 	}
 
 	var user1 = &user{
@@ -34,30 +52,31 @@ func AppCollect(appid uint32, uuid string, eventname string, eventParam map[stri
 	}
 
 	var header1 = &header{
-		AppId: proto.Uint32(appid), //tob产品使用appkey进行上报，appId设置为0即可
-		//Custom: proto.String(""),
+		AppId:    proto.Uint32(appid), //tob产品使用appkey进行上报，appId设置为0即可
+		Custom:   custom,
 		Timezone: proto.Int32(8),
 	}
 
 	par, _ := json.Marshal(eventParam)
 	var event1 = &event{
-		Event:     proto.String(eventname),
-		Params:    proto.String(string(par)),
-		SessionId: proto.String("testsssss"),
+		Event:  proto.String(eventname),
+		Params: proto.String(string(par)),
 	}
 	return appcollector.collectEvent(user1, header1, event1)
 }
 
 //App上报的接口
-func newAppCollector() (collector *appCollector, err error) {
-	//if err = initL(); err != nil {
-	//	return nil, err
+func newAppCollector() (*appCollector, error) {
+
+	//mcsurl := "http://" + httpAddr + ":31081" + appURL
+	//appcollector = &appCollector{
+	//	*newMcsCollector(mcsurl, ""),
 	//}
-	mcsurl := "http://" + httpAddr + ":31081" + appURL
-	collector = &appCollector{
+	mcsurl := "http://" + syncConfIns.HttpConfig.HttpAddr + ":31081" + appURL
+	appcollector = &appCollector{
 		*newMcsCollector(mcsurl, ""),
 	}
-	return
+	return appcollector, nil
 }
 
 //事件上报
@@ -110,7 +129,7 @@ func (this *appCollector) collectEvents(user *user, header *header, events []*ev
 	}
 	req.Header.Set("Content-Type", "application/json")
 	//req.Header.Set("X-MCS-AppKey", this.appKey)
-	if iSLOG {
+	if syncConfIns.EventlogConfig.Islog {
 		logger.Println(string(data))
 		//println("app")
 	}
@@ -121,9 +140,6 @@ func (this *appCollector) collectEvents(user *user, header *header, events []*ev
 func motifyMatchFormatForApp(user *user, header *header, events []*event) error {
 
 	for _, event := range events {
-		//if event.SessionId == nil {
-		//	return fmt.Errorf("SessionID 为空， 不能写入到离线表")
-		//}
 		var par = map[string]interface{}{}
 		data, ok := event.Params.(*string)
 		//ok== false 意味着 空指针
