@@ -1,0 +1,19 @@
+log:
+  islog: true
+  path: log/event.log
+  errlogpath: err.log
+  maxsize: 10   #Mb
+  maxsbackup: 10 #最多保存数目
+  maxage: 60  #days
+
+http:
+  addr: 10.225.130.127
+
+headers:
+  http: 123123
+  host: vpc.host
+
+asyn:
+  routine: 64
+  mqlen: 5000
+  mqwait: 2  #盲等时间，s
