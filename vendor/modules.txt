@@ -1,32 +1,19 @@
-# github.com/donnie4w/go-logger v0.0.0-20170827050443-4740c51383f4
-## explicit
-github.com/donnie4w/go-logger/logger
 # github.com/golang/protobuf v1.4.2
 ## explicit
 github.com/golang/protobuf/proto
-# github.com/lestrrat-go/file-rotatelogs v2.3.0+incompatible
-## explicit
-github.com/lestrrat-go/file-rotatelogs
-github.com/lestrrat-go/file-rotatelogs/internal/option
-# github.com/lestrrat-go/strftime v1.0.3
-## explicit
-github.com/lestrrat-go/strftime
-# github.com/pkg/errors v0.9.1
-## explicit
-github.com/pkg/errors
 # go.uber.org/atomic v1.6.0
 go.uber.org/atomic
 # go.uber.org/multierr v1.5.0
 go.uber.org/multierr
-# go.uber.org/zap v1.15.0
+# go.uber.org/zap v1.16.0
 ## explicit
-go.uber.org/zap
 go.uber.org/zap/buffer
 go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# google.golang.org/protobuf v1.23.0
+# google.golang.org/protobuf v1.25.0
+## explicit
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -37,12 +24,11 @@ google.golang.org/protobuf/internal/encoding/messageset
 google.golang.org/protobuf/internal/encoding/tag
 google.golang.org/protobuf/internal/encoding/text
 google.golang.org/protobuf/internal/errors
-google.golang.org/protobuf/internal/fieldnum
 google.golang.org/protobuf/internal/fieldsort
 google.golang.org/protobuf/internal/filedesc
 google.golang.org/protobuf/internal/filetype
 google.golang.org/protobuf/internal/flags
-google.golang.org/protobuf/internal/genname
+google.golang.org/protobuf/internal/genid
 google.golang.org/protobuf/internal/impl
 google.golang.org/protobuf/internal/mapsort
 google.golang.org/protobuf/internal/pragma
