@@ -43,6 +43,7 @@ type syncConf struct {
 
 type eventlogConfig struct {
 	Islog      bool   `yaml:"islog"` //yaml：yaml格式 enabled：属性的为enabled
+	Iscollect  bool   `yaml:"iscollect"`
 	Path       string `yaml:"path"`
 	MaxSize    int    `yaml:"maxsize"` // megabytes
 	MaxBackups int    `yaml:"maxsbackup"`

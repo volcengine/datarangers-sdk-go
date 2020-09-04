@@ -56,7 +56,9 @@ func (p *mcsCollector) send(dmsg *dancemsg) error {
 		logger.Println(string(data))
 	}
 	fmt.Println(string(data))
-	_, err = p.mscHttpClient.Do(req)
+	if confIns.EventlogConfig.Iscollect {
+		_, err = p.mscHttpClient.Do(req)
+	}
 	return err
 }
 
@@ -112,13 +114,14 @@ func generate(appid int64, uuid string, eventname string, eventParam map[string]
 		Custom:         custom,
 		Device_id:      proto.Int64(1),
 		User_unique_id: proto.String(uuid),
+		Timezone:       proto.Int64(8),
 	}
 
 	timeObj := time.Unix(time.Now().Unix(), 0)
 	itm := &items{
 		Datetime:    proto.String(timeObj.Format("2006-01-02 15:04:05")),
 		Event:       proto.String(eventname),
-		LocalTimeMs: proto.Int64(time.Now().Unix() * 1000),
+		LocalTimeMs: proto.Int64(time.Now().UnixNano() / 1e6),
 		Params:      eventParam,
 	}
 	//time := &timeSync{
