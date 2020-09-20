@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 type apptype string
@@ -47,8 +46,6 @@ var (
 	errstdlog = log.New(os.Stdout, "[ERROR:]", log.Ldate|log.Ltime)
 	loglevel  int
 
-	dialTimeout         = 30 * time.Second
-	totalTimeout        = 30 * time.Second
 	maxIdleConnsPerHost = 1024
 
 	isFirst               = true
@@ -65,9 +62,9 @@ var (
 )
 
 type syncConf struct {
-	EventlogConfig eventlogConfig `yaml:"log"`
-	HttpConfig     httpConfig     `yaml:"http"`
-	Asynconf       asynconf       `yaml:"asyn"`
+	EventlogConfig eventlogConfig `yaml:"Log"`
+	HttpConfig     httpConfig     `yaml:"Http"`
+	Asynconf       asynconf       `yaml:"Asyn"`
 }
 
 type eventlogConfig struct {
@@ -82,7 +79,8 @@ type eventlogConfig struct {
 }
 
 type httpConfig struct {
-	HttpAddr string `yaml:"addr"`
+	HttpAddr      string `yaml:"addr"`
+	SocketTimeOut int    `yaml:"timeout"`
 }
 
 type asynconf struct {
@@ -205,7 +203,7 @@ func InitByFile(path string) error {
 				fatal("headers配置错误： " + err.Error() + ", 将使用默认headers")
 				return err
 			}
-			headers = maps["headers"]
+			headers = maps["Headers"]
 			newLog()
 
 			appcollector = newMcsCollector(confIns.HttpConfig.HttpAddr + "/sdk/log")
@@ -279,6 +277,9 @@ func InitByProperty(p *Property) error {
 			if p.Asyn_mqlen != 0 {
 				defaultconf.Asyn_mqlen = p.Asyn_mqlen
 			}
+			if p.Http_socketTimeOut > 0 {
+				defaultconf.Http_socketTimeOut = p.Http_socketTimeOut
+			}
 			//根据这个初始化 confins。
 			confIns.EventlogConfig.Islog = defaultconf.Log_islog
 			confIns.EventlogConfig.Iscollect = defaultconf.Log_iscollect
@@ -290,6 +291,8 @@ func InitByProperty(p *Property) error {
 			confIns.EventlogConfig.MaxSize = int(defaultconf.Log_maxsize)
 
 			confIns.HttpConfig.HttpAddr = defaultconf.Http_addr
+			confIns.HttpConfig.SocketTimeOut = defaultconf.Http_socketTimeOut
+
 			confIns.Asynconf.Routine = int(defaultconf.Asyn_routine)
 			confIns.Asynconf.Mqlen = int(defaultconf.Asyn_mqlen)
 
@@ -347,35 +350,37 @@ func InitByProperty(p *Property) error {
 }
 
 type Property struct {
-	Log_islog      bool
-	Log_iscollect  bool
-	Log_path       string
-	Log_errlogpath string
-	Log_maxsize    uint32
-	Log_maxsbackup uint32
-	Log_maxage     uint32
-	Log_loglevel   string
-	Http_addr      string //#上报的IP 或 域名, http://10.225.130.127
-	Headers        map[string]interface{}
-	Asyn_routine   uint32
-	Asyn_mqlen     uint32
+	Log_islog          bool
+	Log_iscollect      bool
+	Log_path           string
+	Log_errlogpath     string
+	Log_maxsize        uint32
+	Log_maxsbackup     uint32
+	Log_maxage         uint32
+	Log_loglevel       string
+	Http_addr          string //#上报的IP 或 域名, http://10.225.130.127
+	Http_socketTimeOut int    //
+	Headers            map[string]interface{}
+	Asyn_routine       uint32
+	Asyn_mqlen         uint32
 }
 
 //不初始化 按照默认配置走。
 func init() {
 	defaultconf = &Property{
-		Log_islog:      true,
-		Log_iscollect:  true,
-		Log_path:       "sdklogs/sensors",
-		Log_errlogpath: "sdklogs/errlog",
-		Log_loglevel:   "debug",
-		Log_maxage:     60,
-		Log_maxsize:    10,
-		Log_maxsbackup: 10,
-		Http_addr:      "http://10.225.130.127",
-		Headers:        map[string]interface{}{"host": "snssdk.vpc.com"},
-		Asyn_mqlen:     200000,
-		Asyn_routine:   1024,
+		Log_islog:          true,
+		Log_iscollect:      true,
+		Log_path:           "sdklogs/sensors",
+		Log_errlogpath:     "sdklogs/errlog",
+		Log_loglevel:       "debug",
+		Log_maxage:         60,
+		Log_maxsize:        10,
+		Log_maxsbackup:     10,
+		Http_addr:          "http://default_http_addr",
+		Http_socketTimeOut: 30,
+		Headers:            map[string]interface{}{"host": "snssdk.vpc.com"},
+		Asyn_mqlen:         200000,
+		Asyn_routine:       1024,
 	}
 	InitByProperty(defaultconf)
 	isInit = false
