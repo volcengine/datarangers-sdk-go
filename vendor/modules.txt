@@ -1,6 +1,8 @@
 # github.com/golang/protobuf v1.4.2
 ## explicit
 github.com/golang/protobuf/proto
+# github.com/kirinlabs/HttpRequest v1.0.5
+## explicit
 # go.uber.org/atomic v1.6.0
 go.uber.org/atomic
 # go.uber.org/multierr v1.5.0

@@ -22,7 +22,7 @@ func (p *mq) push(dmg *dancemsg) {
 		select {
 		case p.queue <- dmg:
 			break
-		case <-time.After(30 * time.Second):
+		case <-time.After(1 * time.Second):
 			a, _ := json.Marshal(dmg)
 			warn("消息未进入队列，丢弃")
 			errlogger.Println(string(a))

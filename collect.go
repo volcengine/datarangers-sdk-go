@@ -25,13 +25,13 @@ func newMcsCollector(mcsUrl string) (collector *mcsCollector) {
 		mscHttpClient: &http.Client{
 			Transport: &http.Transport{
 				Dial: func(network, addr string) (net.Conn, error) {
-					return net.DialTimeout(network, addr, dialTimeout)
+					return net.DialTimeout(network, addr, time.Duration(confIns.HttpConfig.SocketTimeOut)*time.Second)
 				},
 				DisableKeepAlives:   false,
 				MaxIdleConnsPerHost: maxIdleConnsPerHost,
 				MaxIdleConns:        maxIdleConnsPerHost,
 			},
-			Timeout: totalTimeout,
+			Timeout: time.Duration(confIns.HttpConfig.SocketTimeOut) * time.Second,
 		},
 	}
 	return
