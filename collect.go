@@ -92,7 +92,22 @@ func (p *mcsCollector) send(dmsg *dancemsg) error {
 				fatal("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
 				return fmt.Errorf("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
 			} else {
-				debug("上报成功！上报的json 为 -> : " + string(tmp))
+				if resp != nil && resp.Body != nil {
+					body, _ := ioutil.ReadAll(resp.Body)
+					a := map[string]interface{}{}
+					err2 := json.Unmarshal(body, &a)
+					if err2 != nil {
+						fatal("解析body出错 ")
+						return fmt.Errorf("解析body出错")
+					}
+					if msg, ok := a["message"]; ok && msg == "success" {
+						debug("上报成功！上报的json 为 -> : " + string(tmp))
+					} else {
+						fatal("数据未上报到applog, 返回body为" + string(body))
+						return fmt.Errorf("数据未上报到applog")
+					}
+					resp.Body.Close()
+				}
 			}
 		}
 		if resp != nil && resp.Body != nil {
