@@ -143,17 +143,15 @@ func newLog() {
 	})
 	logger.SetOutput(w)
 
-	if errlogger == nil {
-		errlogger = &log.Logger{}
-		q := zapcore.AddSync(&lumberjack.Logger{
-			Filename:   confIns.EventlogConfig.ErrPath,
-			MaxSize:    confIns.EventlogConfig.MaxSize, // megabytes
-			MaxBackups: confIns.EventlogConfig.MaxBackups,
-			MaxAge:     confIns.EventlogConfig.MaxAge, // days
-			LocalTime:  true,
-		})
-		errlogger.SetOutput(q)
-	}
+	errlogger = &log.Logger{}
+	q := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   confIns.EventlogConfig.ErrPath,
+		MaxSize:    confIns.EventlogConfig.MaxSize, // megabytes
+		MaxBackups: confIns.EventlogConfig.MaxBackups,
+		MaxAge:     confIns.EventlogConfig.MaxAge, // days
+		LocalTime:  true,
+	})
+	errlogger.SetOutput(q)
 
 }
 
@@ -240,6 +238,7 @@ func InitByFile(path string) error {
 			}
 		}
 	}
+
 	return nil
 }
 
