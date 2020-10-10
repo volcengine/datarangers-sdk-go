@@ -17,7 +17,7 @@ func TestAppCollect(a *testing.T) {
 		Log_maxsize:        30,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.130.127",
+		Http_addr:          "http://10.225.130.16",
 		Http_socketTimeOut: 1,
 		Asyn_mqlen:         150000,
 		Asyn_routine:       128,
