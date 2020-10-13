@@ -14,4 +14,5 @@
 
 ##2020.10.13
 增加了sendprofile接口，增加了5种profile操作类型。
+增加了User-Agent，防止Applog反爬虫。
 
