@@ -15,6 +15,7 @@ import (
 
 type apptype string
 type devicetype string
+type ProfileActionType string
 
 const (
 	LevelTrace = iota
@@ -31,6 +32,12 @@ const (
 
 	IOS     devicetype = "IOS"
 	ANDROID devicetype = "ANDROID"
+
+	SET ProfileActionType = "__profile_set"
+	UNSET ProfileActionType = "__profile_unset"
+	APPEND ProfileActionType = "__profile_append"
+	SET_ONCE ProfileActionType = "__profile_set_once"
+	INCREAMENT ProfileActionType = "__profile_increament"
 )
 
 var (
