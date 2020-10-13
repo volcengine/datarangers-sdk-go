@@ -6,7 +6,8 @@ import (
 )
 
 /**
-producer + consumer
+eventParam : 事件属性
+custom     : 用户自定义事件公共属性
 */
 func SendEvent(apptype1 apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
@@ -27,6 +28,35 @@ func SendEvent(apptype1 apptype, appid int64, uuid string, eventname string, eve
 	mqlxy.push(dmg)
 	return nil
 }
+
+/**
+profileAction ：用户公共属性操作类型
+profileParam :  用户公共属性
+*/
+func SendProfile(apptype1 apptype, appid int64, uuid string, profileAction ProfileActionType, profileParam map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if profileAction != SET && profileAction != SET_ONCE && profileAction != APPEND && profileAction != INCREAMENT && profileAction !=UNSET{
+		fatal("请使用正确的profile操作类型")
+		return nil
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := generate(appid, uuid, string(profileAction), profileParam, map[string]interface{}{}, apptype1)
+	mqlxy.push(dmg)
+	return nil
+}
+
 
 func SendEventWithDevice(apptype apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, device devicetype, deviceKey string) error {
 
