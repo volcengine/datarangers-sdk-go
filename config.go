@@ -97,48 +97,6 @@ type asynconf struct {
 	Mqwait     int    `yaml:"mqwait"`
 }
 
-//同步 异步 都会第一个初始化 此代码。
-//func initConfig() error {
-//	yamlFile, err := ioutil.ReadFile("sdkconf.yml")
-//	if err != nil {
-//		fatal(err)
-//		return err
-//	}
-//	confIns = &syncConf{}
-//	if err = yaml.Unmarshal(yamlFile, confIns); err != nil {
-//		fatal(err)
-//		return err
-//	}
-//	maps := map[string]map[string]interface{}{}
-//	if err = yaml.Unmarshal(yamlFile, &maps); err != nil {
-//		fatal(err)
-//		return err
-//	}
-//	headers = maps["headers"]
-//	newLog()
-//
-//	appcollector = newMcsCollector(confIns.HttpConfig.HttpAddr + "/sdk/log")
-//	timezone = getTimezone()
-//	loglevel, _ = strconv.Atoi(strings.ToUpper(confIns.EventlogConfig.LogLevel))
-//	switch strings.ToUpper(confIns.EventlogConfig.LogLevel) {
-//	default:
-//		loglevel = 3
-//	case "TRACE":
-//		loglevel = 0
-//	case "DEBUG":
-//		loglevel = 1
-//	case "INFO":
-//		loglevel = 2
-//	case "WARN":
-//		loglevel = 3
-//	case "ERROR":
-//		loglevel = 5
-//	case "FATAL":
-//		loglevel = 6
-//	}
-//	return nil
-//}
-
 func newLog() {
 	logger = &log.Logger{}
 	w := zapcore.AddSync(&lumberjack.Logger{
@@ -311,9 +269,9 @@ func InitByProperty(p *Property) error {
 				}
 			} else {
 				if a, err := json.Marshal(confIns); a != nil {
-					debug("自定义 Prooerty 配置 ：" + string(a))
+					debug("自定义 Prooerty 配置 :" + string(a))
 				} else {
-					fatal("自定义 Prooerty 配置error : " + err.Error())
+					fatal("自定义 Prooerty 配置 error : " + err.Error())
 					return err
 				}
 				isFirstConfByProperty = false
@@ -321,7 +279,13 @@ func InitByProperty(p *Property) error {
 
 			//初始化其他参数
 			if p.Headers != nil {
-				headers = p.Headers
+				//覆盖参数，而不是替换。
+				if headers == nil {
+					headers = map[string]interface{}{}
+				}
+				for k,v:= range p.Headers{
+					headers[k] = v;
+				}
 			}
 			newLog()
 			appcollector = newMcsCollector(confIns.HttpConfig.HttpAddr + "/sdk/log")
@@ -384,7 +348,7 @@ func init() {
 		Log_maxsbackup:     10,
 		Http_addr:          "http://default_http_addr",
 		Http_socketTimeOut: 30,
-		Headers:            map[string]interface{}{"host": "snssdk.vpc.com"},
+		Headers:            map[string]interface{}{"host": "snssdk.vpc.com","User-Agent":"GoSDK"},
 		Asyn_mqlen:         200000,
 		Asyn_routine:       1024,
 	}
