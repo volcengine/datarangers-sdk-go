@@ -18,10 +18,11 @@ func TestAppCollect(a *testing.T) {
 		Log_maxsize:        30,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.130.16",
+		Http_addr:          "http://10.225.129.3",
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         150000,
 		Asyn_routine:       128,
+		Headers:     		map[string]interface{}{},
 	})
 	for i := 0; i < 1; i++ {
 		err := SendEvent(APP, 10000013, "uuidwjx2", "old uuid", map[string]interface{}{"param": 1}, map[string]interface{}{"cuns": 1})
@@ -29,7 +30,7 @@ func TestAppCollect(a *testing.T) {
 			//fmt.Println(err.Error())
 		}
 	}
-	time.Sleep(100 * time.Second)
+	time.Sleep(1 * time.Second)
 }
 
 func TestProfileCollect(a *testing.T) {
@@ -44,15 +45,15 @@ func TestProfileCollect(a *testing.T) {
 		Log_maxsize:        30,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.130.16",
+		Http_addr:          "http://10.225.129.3",
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         150000,
 		Asyn_routine:       128,
-		Headers:     map[string]interface{}{"Host":"snssdk.vpc.com", "User-Agent":"GoSDK"},
+		Headers:     		map[string]interface{}{},
 	})
 
 	for i := 0; i < 1; i++ {
-		err := SendProfile(APP, 10000013, "lxy", APPEND, map[string]interface{}{"list": []int{2,3}})
+		err := SendProfile(APP, 10000013, "wjx", SET, map[string]interface{}{"list_test": []string{"a","b"}})
 		if err != nil {
 			fmt.Println(err.Error())
 		}
