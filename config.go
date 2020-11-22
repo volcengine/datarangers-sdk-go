@@ -75,8 +75,9 @@ type syncConf struct {
 }
 
 type eventlogConfig struct {
-	Islog      bool   `yaml:"islog"` //yaml：yaml格式 enabled：属性的为enabled
-	Iscollect  bool   `yaml:"iscollect"`
+	EventSendEnable      bool   `yaml:"send"` //yaml：yaml格式 enabled：属性的为enabled
+	//Islog      bool   `yaml:"islog"` //yaml：yaml格式 enabled：属性的为enabled
+	//Iscollect  bool   `yaml:"iscollect"`
 	Path       string `yaml:"path"`
 	MaxSize    int    `yaml:"maxsize"` // megabytes
 	MaxBackups int    `yaml:"maxsbackup"`
@@ -177,7 +178,6 @@ func InitByFile(path string) error {
 				}
 			}
 			newLog()
-
 			appcollector = newMcsCollector(confIns.HttpConfig.HttpAddr + "/sdk/log")
 			timezone = getTimezone()
 			loglevel, _ = strconv.Atoi(strings.ToUpper(confIns.EventlogConfig.LogLevel))
@@ -222,12 +222,11 @@ func InitByProperty(p *Property) error {
 		firstLock.Lock()
 		defer firstLock.Unlock()
 		if isInit || isFirstConfByProperty {
-			defaultconf.Log_islog = p.Log_islog
-			defaultconf.Log_iscollect = p.Log_iscollect
-			if p.Log_islog && p.Log_path != "" {
+			defaultconf.EventSendEnable = p.EventSendEnable
+			if !p.EventSendEnable && p.Log_path != "" {
 				defaultconf.Log_path = p.Log_path
 			}
-			if p.Log_iscollect && p.Http_addr != "" {
+			if p.EventSendEnable && p.Http_addr != "" {
 				defaultconf.Http_addr = p.Http_addr
 			}
 			if p.Log_errlogpath != "" {
@@ -254,8 +253,7 @@ func InitByProperty(p *Property) error {
 				defaultconf.Http_socketTimeOut = p.Http_socketTimeOut
 			}
 			//根据这个初始化 confins。
-			confIns.EventlogConfig.Islog = defaultconf.Log_islog
-			confIns.EventlogConfig.Iscollect = defaultconf.Log_iscollect
+			confIns.EventlogConfig.EventSendEnable = defaultconf.EventSendEnable
 			confIns.EventlogConfig.LogLevel = defaultconf.Log_loglevel
 			confIns.EventlogConfig.ErrPath = defaultconf.Log_errlogpath
 			confIns.EventlogConfig.Path = defaultconf.Log_path
@@ -329,8 +327,9 @@ func InitByProperty(p *Property) error {
 }
 
 type Property struct {
-	Log_islog          bool
-	Log_iscollect      bool
+	//Log_islog          bool
+	//Log_iscollect      bool
+	EventSendEnable    bool
 	Log_path           string
 	Log_errlogpath     string
 	Log_maxsize        uint32
@@ -347,8 +346,7 @@ type Property struct {
 //不初始化 按照默认配置走。
 func init() {
 	defaultconf = &Property{
-		Log_islog:          true,
-		Log_iscollect:      true,
+		EventSendEnable:    true,
 		Log_path:           "sdklogs/sensors",
 		Log_errlogpath:     "sdklogs/errlog",
 		Log_loglevel:       "debug",

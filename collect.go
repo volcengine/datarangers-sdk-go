@@ -72,52 +72,51 @@ func (p *mcsCollector) send(dmsg *dancemsg) error {
 	debug("request header : " + string(h))
 
 	tmp, _ := json.Marshal(dmsg)
-	//fmt.Println(confIns.EventlogConfig.Islog)
-	if confIns.EventlogConfig.Islog {
+	//
+	if !confIns.EventlogConfig.EventSendEnable {
 		//fmt.Println("保存成功！保存的json 为 -> : " + string(tmp))
 		debug("保存成功！保存的json 为 -> : " + string(tmp))
 		logger.Println(string(data))
+		return nil
 	}
+	//其余的都上报。
 	var resp *http.Response
-	if confIns.EventlogConfig.Iscollect {
+	resp, err = p.mscHttpClient.Do(req)
+	if err != nil {
+		warn(err.Error() + "    消息未发送成功, 重试一次")
 		resp, err = p.mscHttpClient.Do(req)
 		if err != nil {
-			warn(err.Error() + "    消息未发送成功, 重试一次")
-			resp, err = p.mscHttpClient.Do(req)
-			if err != nil {
-				warn(err.Error() + "    重试时 未发送成功 ")
-			}
+			warn(err.Error() + "    重试时 未发送成功 ")
+		}
+	} else {
+		if resp.StatusCode != 200 {
+			fatal("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
+			fmt.Println(resp.Body)
+			body, _ := ioutil.ReadAll(resp.Body)
+			fmt.Println(string(body))
+			return fmt.Errorf("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
 		} else {
-			if resp.StatusCode != 200 {
-				fatal("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
-				fmt.Println(resp.Body)
+			if resp != nil && resp.Body != nil {
 				body, _ := ioutil.ReadAll(resp.Body)
-				fmt.Println(string(body))
-				return fmt.Errorf("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
-			} else {
-				if resp != nil && resp.Body != nil {
-					body, _ := ioutil.ReadAll(resp.Body)
-					a := map[string]interface{}{}
-					err2 := json.Unmarshal(body, &a)
-					if err2 != nil {
-						fatal("解析body出错 ")
-						return fmt.Errorf("解析body出错")
-					}
-					if msg, ok := a["message"]; ok && msg == "success" {
-						debug("上报成功！上报的json 为 -> : " + string(tmp))
-					} else {
-						fatal("数据未上报到applog, 返回body为" + string(body))
-						return fmt.Errorf("数据未上报到applog")
-					}
-					resp.Body.Close()
+				responseMsg := map[string]interface{}{}
+				err2 := json.Unmarshal(body, &responseMsg)
+				if err2 != nil {
+					fatal("解析body出错, body 为 " + string(body))
+					return fmt.Errorf("解析body出错")
 				}
+				if msg, ok := responseMsg["message"]; ok && msg == "success" {
+					debug("上报成功！上报的json 为 -> : " + string(tmp))
+				} else {
+					fatal("数据未上报到applog, 返回body为" + string(body))
+					return fmt.Errorf("数据未上报到applog")
+				}
+				resp.Body.Close()
 			}
 		}
-		if resp != nil && resp.Body != nil {
-			ioutil.ReadAll(resp.Body)
-			resp.Body.Close()
-		}
-		//resp.Body.Close()
+	}
+	if resp != nil && resp.Body != nil {
+		ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
 	}
 	return err
 }

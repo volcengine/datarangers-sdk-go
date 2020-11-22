@@ -10,16 +10,16 @@ type mq struct {
 }
 
 func newMq() *mq {
-	mq1 := &mq{
+	q := &mq{
 		queue: make(chan *dancemsg, confIns.Asynconf.Mqlen),
 	}
-	return mq1
+	return q
 }
 
-func (p *mq) push(dmg *dancemsg) {
+func (q *mq) push(dmg *dancemsg) {
 	go func() {
 		select {
-		case p.queue <- dmg:
+		case q.queue <- dmg:
 			break
 		case <-time.After(1 * time.Second):
 			a, _ := json.Marshal(dmg)
@@ -30,9 +30,9 @@ func (p *mq) push(dmg *dancemsg) {
 	}()
 }
 
-func (p *mq) pop() *dancemsg {
+func (q *mq) pop() *dancemsg {
 	select {
-	case item := <-p.queue:
+	case item := <-q.queue:
 		return item
 	}
 }

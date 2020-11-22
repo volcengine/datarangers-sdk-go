@@ -1,6 +1,5 @@
 Log:
-  islog: true
-  iscollect: true
+  send: false
   path: log/sensors.log
   errlogpath: log/err.log
   maxsize: 10     #Mb
@@ -8,7 +7,7 @@ Log:
   maxage: 60  #days
   loglevel: debug
 Http:
-  addr: http://10.225.130.1265  #上报的IP 或 域名
+  addr: http://10.225.129.3  #上报的IP 或 域名
   timeout: 30 # secenods
   #http://10.225.130.127
 Headers:       #发送的header头,用户自己定义
