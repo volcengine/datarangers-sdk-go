@@ -20,3 +20,6 @@
 修复了headers设置覆盖失败
 问题。
 
+##2020.11.02
+修复了InitByFile后UA覆盖失败问题。 
+增加了5种Profile方法

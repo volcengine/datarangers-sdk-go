@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f68bc86d-9635-4ad6-95db-9d0b2f45ed6c" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/READEME.md" beforeDir="false" afterPath="$PROJECT_DIR$/READEME.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/asyncollect.go" beforeDir="false" afterPath="$PROJECT_DIR$/asyncollect.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collect.go" beforeDir="false" afterPath="$PROJECT_DIR$/collect.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mq.go" beforeDir="false" afterPath="$PROJECT_DIR$/mq.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/unit_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/unit_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/modules.txt" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/modules.txt" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" path="/usr/local/Cellar/go/1.14.5/libexec" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="false" />
+  </component>
+  <component name="ProjectId" id="1ifWClr8ajJ7nbgzv9t60lebABy" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="go.sdk.automatically.set" value="true" />
+    <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
+    <property name="go.vendoring.notification.had.been.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_package_manager_path" value="npm" />
+  </component>
+  <component name="RunManager" selected="Go Test.TestProfileCollect in code.byted.org/dp/datarangers-sdk-go">
+    <configuration name="TestAppCollect in code.byted.org/dp/datarangers-sdk-go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="datarangers-sdk-go" />
+      <working_directory value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="code.byted.org/dp/datarangers-sdk-go" />
+      <pattern value="^TestAppCollect$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestProfileCollect in code.byted.org/dp/datarangers-sdk-go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="datarangers-sdk-go" />
+      <working_directory value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="code.byted.org/dp/datarangers-sdk-go" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/" />
+      <pattern value="^TestProfileCollect$" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.TestProfileCollect in code.byted.org/dp/datarangers-sdk-go" />
+        <item itemvalue="Go Test.TestAppCollect in code.byted.org/dp/datarangers-sdk-go" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>true</integration-enabled>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="635" y="247" key="#xdebugger.evaluate" timestamp="1604311469773">
+      <screen x="60" y="23" width="1620" height="1027" />
+    </state>
+    <state x="635" y="247" key="#xdebugger.evaluate/823.-1057.1920.1057/-1097.-1057.1920.1057/60.23.1620.1027@60.23.1620.1027" timestamp="1604311469773" />
+    <state width="1573" height="346" key="GridCell.Tab.0.bottom" timestamp="1604312374193">
+      <screen x="60" y="23" width="1620" height="1027" />
+    </state>
+    <state width="1576" height="261" key="GridCell.Tab.0.bottom/-1097.-1057.1920.1057/60.23.1620.1027/823.-1057.1920.1057@60.23.1620.1027" timestamp="1603695394349" />
+    <state width="1576" height="261" key="GridCell.Tab.0.bottom/-1097.-1057.1920.1057/62.23.1618.1027/823.-1057.1920.1057@62.23.1618.1027" timestamp="1603693599440" />
+    <state width="1570" height="280" key="GridCell.Tab.0.bottom/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602591013252" />
+    <state width="1545" height="280" key="GridCell.Tab.0.bottom/-1097.-1057.1920.1057/71.23.1609.1027/823.-1057.1920.1057@-1097.-1057.1920.1057" timestamp="1603254341434" />
+    <state width="1545" height="280" key="GridCell.Tab.0.bottom/-1097.-1057.1920.1057/74.23.1606.1027/823.-1057.1920.1057@-1097.-1057.1920.1057" timestamp="1602681918017" />
+    <state width="1570" height="280" key="GridCell.Tab.0.bottom/-1097.-1057.1920.1057/74.23.1606.1027/823.-1057.1920.1057@74.23.1606.1027" timestamp="1602592121941" />
+    <state width="1578" height="261" key="GridCell.Tab.0.bottom/60.23.1620.1027@60.23.1620.1027" timestamp="1603961741967" />
+    <state width="1570" height="346" key="GridCell.Tab.0.bottom/74.23.1606.1027@74.23.1606.1027" timestamp="1602595032908" />
+    <state width="1578" height="261" key="GridCell.Tab.0.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/53.23.1627.1027@53.23.1627.1027" timestamp="1603961323437" />
+    <state width="1583" height="261" key="GridCell.Tab.0.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/55.23.1625.1027@-1097.-1057.1920.1057" timestamp="1603963282856" />
+    <state width="1573" height="346" key="GridCell.Tab.0.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/60.23.1620.1027@60.23.1620.1027" timestamp="1604312374193" />
+    <state width="1573" height="346" key="GridCell.Tab.0.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604310019698" />
+    <state width="1583" height="261" key="GridCell.Tab.0.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@-1097.-1057.1920.1057" timestamp="1603966903444" />
+    <state width="1570" height="261" key="GridCell.Tab.0.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@65.23.1615.1027" timestamp="1603790920327" />
+    <state width="1545" height="280" key="GridCell.Tab.0.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/71.23.1609.1027@71.23.1609.1027" timestamp="1602671655952" />
+    <state width="1545" height="280" key="GridCell.Tab.0.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/74.23.1606.1027@74.23.1606.1027" timestamp="1602671898252" />
+    <state width="1573" height="346" key="GridCell.Tab.0.center" timestamp="1604312374192">
+      <screen x="60" y="23" width="1620" height="1027" />
+    </state>
+    <state width="1576" height="261" key="GridCell.Tab.0.center/-1097.-1057.1920.1057/60.23.1620.1027/823.-1057.1920.1057@60.23.1620.1027" timestamp="1603695394349" />
+    <state width="1576" height="261" key="GridCell.Tab.0.center/-1097.-1057.1920.1057/62.23.1618.1027/823.-1057.1920.1057@62.23.1618.1027" timestamp="1603693599440" />
+    <state width="1570" height="280" key="GridCell.Tab.0.center/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602591013252" />
+    <state width="1545" height="280" key="GridCell.Tab.0.center/-1097.-1057.1920.1057/71.23.1609.1027/823.-1057.1920.1057@-1097.-1057.1920.1057" timestamp="1603254341434" />
+    <state width="1545" height="280" key="GridCell.Tab.0.center/-1097.-1057.1920.1057/74.23.1606.1027/823.-1057.1920.1057@-1097.-1057.1920.1057" timestamp="1602681918016" />
+    <state width="1570" height="280" key="GridCell.Tab.0.center/-1097.-1057.1920.1057/74.23.1606.1027/823.-1057.1920.1057@74.23.1606.1027" timestamp="1602592121940" />
+    <state width="1578" height="261" key="GridCell.Tab.0.center/60.23.1620.1027@60.23.1620.1027" timestamp="1603961741966" />
+    <state width="1570" height="346" key="GridCell.Tab.0.center/74.23.1606.1027@74.23.1606.1027" timestamp="1602595032907" />
+    <state width="1578" height="261" key="GridCell.Tab.0.center/823.-1057.1920.1057/-1097.-1057.1920.1057/53.23.1627.1027@53.23.1627.1027" timestamp="1603961323435" />
+    <state width="1583" height="261" key="GridCell.Tab.0.center/823.-1057.1920.1057/-1097.-1057.1920.1057/55.23.1625.1027@-1097.-1057.1920.1057" timestamp="1603963282855" />
+    <state width="1573" height="346" key="GridCell.Tab.0.center/823.-1057.1920.1057/-1097.-1057.1920.1057/60.23.1620.1027@60.23.1620.1027" timestamp="1604312374192" />
+    <state width="1573" height="346" key="GridCell.Tab.0.center/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604310019698" />
+    <state width="1583" height="261" key="GridCell.Tab.0.center/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@-1097.-1057.1920.1057" timestamp="1603966903444" />
+    <state width="1570" height="261" key="GridCell.Tab.0.center/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@65.23.1615.1027" timestamp="1603790920326" />
+    <state width="1545" height="280" key="GridCell.Tab.0.center/823.-1057.1920.1057/-1097.-1057.1920.1057/71.23.1609.1027@71.23.1609.1027" timestamp="1602671655951" />
+    <state width="1545" height="280" key="GridCell.Tab.0.center/823.-1057.1920.1057/-1097.-1057.1920.1057/74.23.1606.1027@74.23.1606.1027" timestamp="1602671898251" />
+    <state width="1573" height="346" key="GridCell.Tab.0.left" timestamp="1604312374192">
+      <screen x="60" y="23" width="1620" height="1027" />
+    </state>
+    <state width="1576" height="261" key="GridCell.Tab.0.left/-1097.-1057.1920.1057/60.23.1620.1027/823.-1057.1920.1057@60.23.1620.1027" timestamp="1603695394348" />
+    <state width="1576" height="261" key="GridCell.Tab.0.left/-1097.-1057.1920.1057/62.23.1618.1027/823.-1057.1920.1057@62.23.1618.1027" timestamp="1603693599439" />
+    <state width="1570" height="280" key="GridCell.Tab.0.left/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602591013251" />
+    <state width="1545" height="280" key="GridCell.Tab.0.left/-1097.-1057.1920.1057/71.23.1609.1027/823.-1057.1920.1057@-1097.-1057.1920.1057" timestamp="1603254341434" />
+    <state width="1545" height="280" key="GridCell.Tab.0.left/-1097.-1057.1920.1057/74.23.1606.1027/823.-1057.1920.1057@-1097.-1057.1920.1057" timestamp="1602681918015" />
+    <state width="1570" height="280" key="GridCell.Tab.0.left/-1097.-1057.1920.1057/74.23.1606.1027/823.-1057.1920.1057@74.23.1606.1027" timestamp="1602592121940" />
+    <state width="1578" height="261" key="GridCell.Tab.0.left/60.23.1620.1027@60.23.1620.1027" timestamp="1603961741966" />
+    <state width="1570" height="346" key="GridCell.Tab.0.left/74.23.1606.1027@74.23.1606.1027" timestamp="1602595032907" />
+    <state width="1578" height="261" key="GridCell.Tab.0.left/823.-1057.1920.1057/-1097.-1057.1920.1057/53.23.1627.1027@53.23.1627.1027" timestamp="1603961323435" />
+    <state width="1583" height="261" key="GridCell.Tab.0.left/823.-1057.1920.1057/-1097.-1057.1920.1057/55.23.1625.1027@-1097.-1057.1920.1057" timestamp="1603963282854" />
+    <state width="1573" height="346" key="GridCell.Tab.0.left/823.-1057.1920.1057/-1097.-1057.1920.1057/60.23.1620.1027@60.23.1620.1027" timestamp="1604312374192" />
+    <state width="1573" height="346" key="GridCell.Tab.0.left/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604310019697" />
+    <state width="1583" height="261" key="GridCell.Tab.0.left/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@-1097.-1057.1920.1057" timestamp="1603966903443" />
+    <state width="1570" height="261" key="GridCell.Tab.0.left/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@65.23.1615.1027" timestamp="1603790920326" />
+    <state width="1545" height="280" key="GridCell.Tab.0.left/823.-1057.1920.1057/-1097.-1057.1920.1057/71.23.1609.1027@71.23.1609.1027" timestamp="1602671655950" />
+    <state width="1545" height="280" key="GridCell.Tab.0.left/823.-1057.1920.1057/-1097.-1057.1920.1057/74.23.1606.1027@74.23.1606.1027" timestamp="1602671898250" />
+    <state width="1573" height="346" key="GridCell.Tab.0.right" timestamp="1604312374193">
+      <screen x="60" y="23" width="1620" height="1027" />
+    </state>
+    <state width="1576" height="261" key="GridCell.Tab.0.right/-1097.-1057.1920.1057/60.23.1620.1027/823.-1057.1920.1057@60.23.1620.1027" timestamp="1603695394349" />
+    <state width="1576" height="261" key="GridCell.Tab.0.right/-1097.-1057.1920.1057/62.23.1618.1027/823.-1057.1920.1057@62.23.1618.1027" timestamp="1603693599440" />
+    <state width="1570" height="280" key="GridCell.Tab.0.right/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602591013252" />
+    <state width="1545" height="280" key="GridCell.Tab.0.right/-1097.-1057.1920.1057/71.23.1609.1027/823.-1057.1920.1057@-1097.-1057.1920.1057" timestamp="1603254341434" />
+    <state width="1545" height="280" key="GridCell.Tab.0.right/-1097.-1057.1920.1057/74.23.1606.1027/823.-1057.1920.1057@-1097.-1057.1920.1057" timestamp="1602681918016" />
+    <state width="1570" height="280" key="GridCell.Tab.0.right/-1097.-1057.1920.1057/74.23.1606.1027/823.-1057.1920.1057@74.23.1606.1027" timestamp="1602592121941" />
+    <state width="1578" height="261" key="GridCell.Tab.0.right/60.23.1620.1027@60.23.1620.1027" timestamp="1603961741967" />
+    <state width="1570" height="346" key="GridCell.Tab.0.right/74.23.1606.1027@74.23.1606.1027" timestamp="1602595032908" />
+    <state width="1578" height="261" key="GridCell.Tab.0.right/823.-1057.1920.1057/-1097.-1057.1920.1057/53.23.1627.1027@53.23.1627.1027" timestamp="1603961323436" />
+    <state width="1583" height="261" key="GridCell.Tab.0.right/823.-1057.1920.1057/-1097.-1057.1920.1057/55.23.1625.1027@-1097.-1057.1920.1057" timestamp="1603963282855" />
+    <state width="1573" height="346" key="GridCell.Tab.0.right/823.-1057.1920.1057/-1097.-1057.1920.1057/60.23.1620.1027@60.23.1620.1027" timestamp="1604312374193" />
+    <state width="1573" height="346" key="GridCell.Tab.0.right/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604310019698" />
+    <state width="1583" height="261" key="GridCell.Tab.0.right/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@-1097.-1057.1920.1057" timestamp="1603966903444" />
+    <state width="1570" height="261" key="GridCell.Tab.0.right/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@65.23.1615.1027" timestamp="1603790920326" />
+    <state width="1545" height="280" key="GridCell.Tab.0.right/823.-1057.1920.1057/-1097.-1057.1920.1057/71.23.1609.1027@71.23.1609.1027" timestamp="1602671655952" />
+    <state width="1545" height="280" key="GridCell.Tab.0.right/823.-1057.1920.1057/-1097.-1057.1920.1057/74.23.1606.1027@74.23.1606.1027" timestamp="1602671898252" />
+    <state width="1573" height="346" key="GridCell.Tab.1.bottom" timestamp="1604312374194">
+      <screen x="60" y="23" width="1620" height="1027" />
+    </state>
+    <state width="1570" height="346" key="GridCell.Tab.1.bottom/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602590322759" />
+    <state width="1570" height="346" key="GridCell.Tab.1.bottom/74.23.1606.1027@74.23.1606.1027" timestamp="1602595032909" />
+    <state width="1573" height="346" key="GridCell.Tab.1.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/60.23.1620.1027@60.23.1620.1027" timestamp="1604312374194" />
+    <state width="1573" height="346" key="GridCell.Tab.1.bottom/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604310020056" />
+    <state width="1573" height="346" key="GridCell.Tab.1.center" timestamp="1604312374193">
+      <screen x="60" y="23" width="1620" height="1027" />
+    </state>
+    <state width="1570" height="346" key="GridCell.Tab.1.center/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602590322758" />
+    <state width="1570" height="346" key="GridCell.Tab.1.center/74.23.1606.1027@74.23.1606.1027" timestamp="1602595032908" />
+    <state width="1573" height="346" key="GridCell.Tab.1.center/823.-1057.1920.1057/-1097.-1057.1920.1057/60.23.1620.1027@60.23.1620.1027" timestamp="1604312374193" />
+    <state width="1573" height="346" key="GridCell.Tab.1.center/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604310020056" />
+    <state width="1573" height="346" key="GridCell.Tab.1.left" timestamp="1604312374193">
+      <screen x="60" y="23" width="1620" height="1027" />
+    </state>
+    <state width="1570" height="346" key="GridCell.Tab.1.left/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602590322758" />
+    <state width="1570" height="346" key="GridCell.Tab.1.left/74.23.1606.1027@74.23.1606.1027" timestamp="1602595032908" />
+    <state width="1573" height="346" key="GridCell.Tab.1.left/823.-1057.1920.1057/-1097.-1057.1920.1057/60.23.1620.1027@60.23.1620.1027" timestamp="1604312374193" />
+    <state width="1573" height="346" key="GridCell.Tab.1.left/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604310020055" />
+    <state width="1573" height="346" key="GridCell.Tab.1.right" timestamp="1604312374194">
+      <screen x="60" y="23" width="1620" height="1027" />
+    </state>
+    <state width="1570" height="346" key="GridCell.Tab.1.right/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602590322758" />
+    <state width="1570" height="346" key="GridCell.Tab.1.right/74.23.1606.1027@74.23.1606.1027" timestamp="1602595032909" />
+    <state width="1573" height="346" key="GridCell.Tab.1.right/823.-1057.1920.1057/-1097.-1057.1920.1057/60.23.1620.1027@60.23.1620.1027" timestamp="1604312374194" />
+    <state width="1573" height="346" key="GridCell.Tab.1.right/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604310020056" />
+    <state width="806" height="513" key="XDebugger.FullValuePopup" timestamp="1602590096622">
+      <screen x="68" y="23" width="1612" height="1027" />
+    </state>
+    <state width="806" height="513" key="XDebugger.FullValuePopup/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602590096622" />
+    <state x="571" y="291" width="602" height="490" key="find.popup" timestamp="1604309886031">
+      <screen x="62" y="23" width="1618" height="1027" />
+    </state>
+    <state x="575" y="291" width="598" height="490" key="find.popup/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602590027816" />
+    <state x="571" y="291" width="602" height="490" key="find.popup/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604309886031" />
+    <state x="573" y="291" width="600" height="490" key="find.popup/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@65.23.1615.1027" timestamp="1603790601570" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/collect.go</url>
+          <line>91</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

@@ -9,7 +9,7 @@ import (
 eventParam : 事件属性
 custom     : 用户自定义事件公共属性
 */
-func SendEvent(apptype1 apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
+func SendEvent(apptype1 Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
 	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
 		fatal("apptype 只能为 MP WEB APP")
@@ -33,7 +33,7 @@ func SendEvent(apptype1 apptype, appid int64, uuid string, eventname string, eve
 profileAction ：用户公共属性操作类型
 profileParam :  用户公共属性
 */
-func SendProfile(apptype1 apptype, appid int64, uuid string, profileAction ProfileActionType, profileParam map[string]interface{}) error {
+func SendProfile(apptype1 Apptype, appid int64, uuid string, profileAction ProfileActionType, profileParam map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
 	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
 		fatal("apptype 只能为 MP WEB APP")
@@ -58,7 +58,113 @@ func SendProfile(apptype1 apptype, appid int64, uuid string, profileAction Profi
 }
 
 
-func SendEventWithDevice(apptype apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, device devicetype, deviceKey string) error {
+func ProfileSet(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := generate(appid, uuid, string(SET), profileParam, map[string]interface{}{}, apptype1)
+	mqlxy.push(dmg)
+	return nil
+}
+
+
+func ProfileSetOnce(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := generate(appid, uuid, string(SET_ONCE), profileParam, map[string]interface{}{}, apptype1)
+	mqlxy.push(dmg)
+	return nil
+}
+
+
+func ProfileIncrement(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := generate(appid, uuid, string(INCREAMENT), profileParam, map[string]interface{}{}, apptype1)
+	mqlxy.push(dmg)
+	return nil
+}
+
+
+func ProfileUnset(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := generate(appid, uuid, string(UNSET), profileParam, map[string]interface{}{}, apptype1)
+	mqlxy.push(dmg)
+	return nil
+}
+
+
+func ProfileAppend(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := generate(appid, uuid, string(APPEND), profileParam, map[string]interface{}{}, apptype1)
+	mqlxy.push(dmg)
+	return nil
+}
+
+
+
+func SendEventWithDevice(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, device devicetype, deviceKey string) error {
 
 	if apptype != MP && apptype != WEB && apptype != APP {
 		fatal("apptype 只能为 MP WEB APP")
@@ -125,3 +231,8 @@ func (p *execpool) exec() {
 		}()
 	}
 }
+
+
+/**
+ * 服务端麦
+ */

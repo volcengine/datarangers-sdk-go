@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/golang/protobuf v1.4.2
+	github.com/panjf2000/ants v1.3.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0
 	google.golang.org/protobuf v1.25.0 // indirect
