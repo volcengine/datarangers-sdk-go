@@ -13,7 +13,7 @@ import (
 	"sync"
 )
 
-type apptype string
+type Apptype string
 type devicetype string
 type ProfileActionType string
 
@@ -26,9 +26,9 @@ const (
 	LevelError
 	LevelFatal
 
-	MP  apptype = "mp"
-	APP apptype = "app"
-	WEB apptype = "web"
+	MP  Apptype = "mp"
+	APP Apptype = "app"
+	WEB Apptype = "web"
 
 	IOS     devicetype = "IOS"
 	ANDROID devicetype = "ANDROID"
@@ -37,7 +37,7 @@ const (
 	UNSET ProfileActionType = "__profile_unset"
 	APPEND ProfileActionType = "__profile_append"
 	SET_ONCE ProfileActionType = "__profile_set_once"
-	INCREAMENT ProfileActionType = "__profile_increament"
+	INCREAMENT ProfileActionType = "__profile_increment"
 )
 
 var (
@@ -166,7 +166,16 @@ func InitByFile(path string) error {
 				fatal("headers配置错误： " + err.Error() + ", 将使用默认headers")
 				return err
 			}
-			headers = maps["Headers"]
+
+			if maps["Headers"]!= nil {
+				//覆盖参数，而不是替换。
+				if headers == nil {
+					headers = map[string]interface{}{}
+				}
+				for k,v:= range maps["Headers"]{
+					headers[k] = v;
+				}
+			}
 			newLog()
 
 			appcollector = newMcsCollector(confIns.HttpConfig.HttpAddr + "/sdk/log")

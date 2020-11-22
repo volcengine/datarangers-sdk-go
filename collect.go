@@ -90,6 +90,9 @@ func (p *mcsCollector) send(dmsg *dancemsg) error {
 		} else {
 			if resp.StatusCode != 200 {
 				fatal("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
+				fmt.Println(resp.Body)
+				body, _ := ioutil.ReadAll(resp.Body)
+				fmt.Println(string(body))
 				return fmt.Errorf("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
 			} else {
 				if resp != nil && resp.Body != nil {
@@ -119,7 +122,7 @@ func (p *mcsCollector) send(dmsg *dancemsg) error {
 	return err
 }
 
-func collectsync(apptype apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
+func collectsync(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
 	//if err := firstInit(); err != nil {
 	//	return err
 	//}
@@ -136,22 +139,8 @@ func collectsync(apptype apptype, appid int64, uuid string, eventname string, ev
 	return nil
 }
 
-//func firstInit() error {
-//	if isFirst {
-//		firstLock.Lock()
-//		if isFirst {
-//			if err := initConfig(); err != nil {
-//				firstLock.Unlock()
-//				return err
-//			}
-//			isFirst = false
-//			firstLock.Unlock()
-//		}
-//	}
-//	return nil
-//}
 
-func generate(appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, apptype1 apptype) *dancemsg {
+func generate(appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, apptype1 Apptype) *dancemsg {
 	hd := &header{
 		Aid:            proto.Int64(appid),
 		Custom:         custom,

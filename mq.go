@@ -17,7 +17,6 @@ func newMq() *mq {
 }
 
 func (p *mq) push(dmg *dancemsg) {
-
 	go func() {
 		select {
 		case p.queue <- dmg:

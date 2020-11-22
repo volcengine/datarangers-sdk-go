@@ -8,7 +8,7 @@ import (
 
 func TestAppCollect(a *testing.T) {
 
-	//InitByFile("sdkconf.yml")
+	InitByFile("sdkconf.yml")
 	InitByProperty(&Property{
 		Log_islog:          true,
 		Log_loglevel:       "debug", //log level
@@ -18,7 +18,7 @@ func TestAppCollect(a *testing.T) {
 		Log_maxsize:        30,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.129.3",
+		Http_addr:          "http://120.222.204.142",
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         150000,
 		Asyn_routine:       128,
@@ -53,7 +53,7 @@ func TestProfileCollect(a *testing.T) {
 	})
 
 	for i := 0; i < 1; i++ {
-		err := SendProfile(APP, 10000013, "wjx", SET, map[string]interface{}{"list_test": []string{"a","b"}})
+		err := ProfileAppend(APP, 10000000, "lxy", map[string]interface{}{"list7":43, "list8":[]string{"bh1"}})
 		if err != nil {
 			fmt.Println(err.Error())
 		}
