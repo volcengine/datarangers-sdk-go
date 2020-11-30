@@ -75,7 +75,7 @@ type syncConf struct {
 }
 
 type eventlogConfig struct {
-	EventSendEnable      bool   `yaml:"send"` //yaml：yaml格式 enabled：属性的为enabled
+	EventSendEnable      bool   `yaml:"eventsendenable"` //yaml：yaml格式 enabled：属性的为enabled
 	//Islog      bool   `yaml:"islog"` //yaml：yaml格式 enabled：属性的为enabled
 	//Iscollect  bool   `yaml:"iscollect"`
 	Path       string `yaml:"path"`
