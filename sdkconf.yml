@@ -1,5 +1,5 @@
 Log:
-  send: false
+  eventsendenable: false
   path: log/sensors.log
   errlogpath: log/err.log
   maxsize: 10     #Mb
