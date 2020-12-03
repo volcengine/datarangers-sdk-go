@@ -21,8 +21,15 @@
   <component name="ChangeListManager">
     <list default="true" id="f68bc86d-9635-4ad6-95db-9d0b2f45ed6c" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sdklogs1/sensors1" beforeDir="false" afterPath="$PROJECT_DIR$/sdklogs1/sensors1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unit_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/unit_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/asyncollect.go" beforeDir="false" afterPath="$PROJECT_DIR$/asyncollect.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collect.go" beforeDir="false" afterPath="$PROJECT_DIR$/collect.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/err.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/log/sensors.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model.go" beforeDir="false" afterPath="$PROJECT_DIR$/model.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mq.go" beforeDir="false" afterPath="$PROJECT_DIR$/mq.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sdklogs1/sensors1" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -225,11 +232,12 @@
       <screen x="68" y="23" width="1612" height="1027" />
     </state>
     <state width="806" height="513" key="XDebugger.FullValuePopup/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602590096622" />
-    <state x="582" y="291" width="597" height="490" key="find.popup" timestamp="1606707117304">
+    <state x="582" y="291" width="597" height="490" key="find.popup" timestamp="1606981315534">
       <screen x="78" y="23" width="1602" height="1027" />
     </state>
     <state x="575" y="291" width="598" height="490" key="find.popup/-1097.-1057.1920.1057/68.23.1612.1027/823.-1057.1920.1057@68.23.1612.1027" timestamp="1602590027816" />
     <state x="577" y="291" width="599" height="490" key="find.popup/-1097.-1057.1920.1057/71.23.1609.1027/823.-1057.1920.1057@71.23.1609.1027" timestamp="1606031712681" />
+    <state x="582" y="291" width="597" height="490" key="find.popup/-1097.-1057.1920.1057/78.23.1602.1027/823.-1057.1920.1057@78.23.1602.1027" timestamp="1606981315534" />
     <state x="571" y="291" width="602" height="490" key="find.popup/823.-1057.1920.1057/-1097.-1057.1920.1057/62.23.1618.1027@62.23.1618.1027" timestamp="1604309886031" />
     <state x="573" y="291" width="600" height="490" key="find.popup/823.-1057.1920.1057/-1097.-1057.1920.1057/65.23.1615.1027@65.23.1615.1027" timestamp="1603790601570" />
     <state x="577" y="291" width="599" height="490" key="find.popup/823.-1057.1920.1057/-1097.-1057.1920.1057/71.23.1609.1027@71.23.1609.1027" timestamp="1606036977636" />
@@ -240,12 +248,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/collect.go</url>
-          <line>75</line>
+          <line>81</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/config.go</url>
-          <line>224</line>
+          <line>229</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
