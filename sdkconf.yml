@@ -7,9 +7,8 @@ Log:
   maxage: 60  #days
   loglevel: debug
 Http:
-  addr: http://10.225.129.3  #上报的IP 或 域名
+  addr: http://doman  #上报的IP 或 域名
   timeout: 30 # secenods
-  #http://10.225.130.127
 Headers:       #发送的header头,用户自己定义
   host: snssdk.vpc.com
 Asyn:

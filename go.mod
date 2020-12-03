@@ -1,4 +1,4 @@
-module code.byted.org/dp/datarangers-sdk-go
+module datarangers-sdk-go
 
 go 1.14
 
