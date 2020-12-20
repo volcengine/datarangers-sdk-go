@@ -23,3 +23,8 @@
 ##2020.11.02
 修复了InitByFile后UA覆盖失败问题。 
 增加了5种Profile方法
+
+##2020.12.20
+将内部数据格式设置为public。
+增加了Item上报事件接口。
+增加了设置ItemSet ItemUnset接口。
