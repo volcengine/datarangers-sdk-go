@@ -43,7 +43,7 @@ func newMcsCollector(mcsUrl string) (collector *mcsCollector) {
 	return
 }
 
-func (p *mcsCollector) send(dmsg *dancemsg) error {
+func (p *mcsCollector) send(dmsg interface{}) error {
 	data, err := json.Marshal(dmsg)
 	if err != nil {
 		fatal(err.Error())
@@ -55,11 +55,7 @@ func (p *mcsCollector) send(dmsg *dancemsg) error {
 		return err
 	}
 	req.Header.Add("Content-Type", "application/json")
-	//req.Header.Add("Host", "snssdk.vpc.com")
-	//req.Host = "snssdk.vpc.com"
-	//defer req.Body.Close()
 	defer func() {
-		//ioutil.ReadAll(req.Body)
 		req.Body.Close()
 	}()
 	//补充 header
@@ -80,7 +76,6 @@ func (p *mcsCollector) send(dmsg *dancemsg) error {
 	tmp, _ := json.Marshal(dmsg)
 	//
 	if !confIns.EventlogConfig.EventSendEnable {
-		//fmt.Println("保存成功！保存的json 为 -> : " + string(tmp))
 		debug("保存成功！保存的json 为 -> : " + string(tmp))
 		logger.Println(string(data))
 		return nil
@@ -128,9 +123,6 @@ func (p *mcsCollector) send(dmsg *dancemsg) error {
 }
 
 func collectsync(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
-	//if err := firstInit(); err != nil {
-	//	return err
-	//}
 	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype)
 	if err := appcollector.send(dmg); err != nil {
 		data, a := json.Marshal(dmg)
@@ -145,8 +137,8 @@ func collectsync(apptype Apptype, appid int64, uuid string, eventname string, ev
 }
 
 
-func generate(appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, apptype1 Apptype) *dancemsg {
-	hd := &header{
+func generate(appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, apptype1 Apptype) *ServerSdkEventMessage {
+	hd := &Header{
 		Aid:            proto.Int64(appid),
 		Custom:         custom,
 		Device_id:      proto.Int64(1),
@@ -155,25 +147,20 @@ func generate(appid int64, uuid string, eventname string, eventParam map[string]
 	}
 
 	timeObj := time.Unix(time.Now().Unix(), 0)
-	itm := &items{
+	itm := &Event_v3{
 		Datetime:    proto.String(timeObj.Format("2006-01-02 15:04:05")),
 		Event:       proto.String(eventname),
 		LocalTimeMs: proto.Int64(time.Now().UnixNano() / 1e6),
 		Params:      eventParam,
 	}
-	//time := &timeSync{
-	//	Local_time: proto.Int64(1),
-	//	Server_time: proto.Int64(1),
-	//}
-	dmg := &dancemsg{
+	dmg := &ServerSdkEventMessage{
 		App_id:         proto.Int64(appid),
 		User_unique_id: proto.String(uuid),
 		App_type:       proto.String(string(apptype1)),
 		Device_id:      proto.Int64(1),
 	}
-	dmg.Event_v3 = []*items{itm}
+	dmg.Event_v3 = []*Event_v3{itm}
 	dmg.Header = hd
-	//dmg.TimeSync = time
 	return dmg
 }
 

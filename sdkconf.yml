@@ -1,8 +1,8 @@
 Log:
   eventsendenable: false
   path: log/sensors.log
-  errlogpath: log/err.log
-  maxsize: 10     #Mb
+  errlogpath: log/id.log.13:47
+  maxsize: 100     #Mb
   maxsbackup: 10 #日志最多保存数目
   maxage: 60  #days
   loglevel: debug

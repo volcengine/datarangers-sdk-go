@@ -17,9 +17,9 @@ import (
 eventParam : 事件属性
 custom     : 用户自定义事件公共属性
 */
-func SendEvent(apptype1 Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
+func SendEvent(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+	if apptype != MP && apptype != WEB && apptype != APP {
 		fatal("apptype 只能为 MP WEB APP")
 		return nil
 	}
@@ -32,7 +32,7 @@ func SendEvent(apptype1 Apptype, appid int64, uuid string, eventname string, eve
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype1)
+	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype)
 	mqlxy.push(dmg)
 	return nil
 }
@@ -41,9 +41,9 @@ func SendEvent(apptype1 Apptype, appid int64, uuid string, eventname string, eve
 profileAction ：用户公共属性操作类型
 profileParam :  用户公共属性
 */
-func SendProfile(apptype1 Apptype, appid int64, uuid string, profileAction ProfileActionType, profileParam map[string]interface{}) error {
+func SendProfile(apptype Apptype, appid int64, uuid string, profileAction ProfileActionType, profileParam map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+	if apptype != MP && apptype != WEB && apptype != APP {
 		fatal("apptype 只能为 MP WEB APP")
 		return nil
 	}
@@ -60,15 +60,15 @@ func SendProfile(apptype1 Apptype, appid int64, uuid string, profileAction Profi
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(profileAction), profileParam, map[string]interface{}{}, apptype1)
+	dmg := generate(appid, uuid, string(profileAction), profileParam, map[string]interface{}{}, apptype)
 	mqlxy.push(dmg)
 	return nil
 }
 
 
-func ProfileSet(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+func SendItem(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, itemList []*Item) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+	if apptype != MP && apptype != WEB && apptype != APP {
 		fatal("apptype 只能为 MP WEB APP")
 		return nil
 	}
@@ -81,15 +81,28 @@ func ProfileSet(apptype1 Apptype, appid int64, uuid string, profileParam map[str
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(SET), profileParam, map[string]interface{}{}, apptype1)
+	generateItem(eventParam, itemList)
+	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype)
 	mqlxy.push(dmg)
 	return nil
 }
 
+func generateItem(eventParam map[string]interface{}, itemList []*Item) {
+	var __items = []interface{}{}
+	itemmap := map[string][]interface{}{}
+	for _, item := range itemList {
+		itemIdmap := map[string]interface{}{}
+		itemIdmap["id"] = item.ItemId
+		itemmap[*item.ItemName] = append(itemmap[*item.ItemName], itemIdmap)
+	}
+	__items = append(__items, itemmap)
+	eventParam["__items"] = __items
+}
 
-func ProfileSetOnce(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+
+func ItemSet(apptype Apptype, appid int64, itemParam map[string]interface{}, item Item) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+	if apptype != MP && apptype != WEB && apptype != APP {
 		fatal("apptype 只能为 MP WEB APP")
 		return nil
 	}
@@ -102,15 +115,16 @@ func ProfileSetOnce(apptype1 Apptype, appid int64, uuid string, profileParam map
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(SET_ONCE), profileParam, map[string]interface{}{}, apptype1)
+	itemParam["item_name"] = item.ItemName
+	itemParam["item_id"] = item.ItemId
+	dmg := generate(appid, "__rangers", "__item_set", itemParam, map[string]interface{}{}, apptype)
 	mqlxy.push(dmg)
 	return nil
 }
 
-
-func ProfileIncrement(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+func ItemUnset(apptype Apptype, appid int64, itemParam map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+	if apptype != MP && apptype != WEB && apptype != APP {
 		fatal("apptype 只能为 MP WEB APP")
 		return nil
 	}
@@ -123,15 +137,15 @@ func ProfileIncrement(apptype1 Apptype, appid int64, uuid string, profileParam m
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(INCREAMENT), profileParam, map[string]interface{}{}, apptype1)
+	dmg := generate(appid, "__rangers", "__item_unset", itemParam, map[string]interface{}{}, apptype)
 	mqlxy.push(dmg)
 	return nil
 }
 
 
-func ProfileUnset(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+func ProfileSet(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+	if apptype != MP && apptype != WEB && apptype != APP {
 		fatal("apptype 只能为 MP WEB APP")
 		return nil
 	}
@@ -144,15 +158,15 @@ func ProfileUnset(apptype1 Apptype, appid int64, uuid string, profileParam map[s
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(UNSET), profileParam, map[string]interface{}{}, apptype1)
+	dmg := generate(appid, uuid, string(SET), profileParam, map[string]interface{}{}, apptype)
 	mqlxy.push(dmg)
 	return nil
 }
 
 
-func ProfileAppend(apptype1 Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+func ProfileSetOnce(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype1 != MP && apptype1 != WEB && apptype1 != APP {
+	if apptype != MP && apptype != WEB && apptype != APP {
 		fatal("apptype 只能为 MP WEB APP")
 		return nil
 	}
@@ -165,7 +179,70 @@ func ProfileAppend(apptype1 Apptype, appid int64, uuid string, profileParam map[
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(APPEND), profileParam, map[string]interface{}{}, apptype1)
+	dmg := generate(appid, uuid, string(SET_ONCE), profileParam, map[string]interface{}{}, apptype)
+	mqlxy.push(dmg)
+	return nil
+}
+
+
+func ProfileIncrement(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype != MP && apptype != WEB && apptype != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := generate(appid, uuid, string(INCREAMENT), profileParam, map[string]interface{}{}, apptype)
+	mqlxy.push(dmg)
+	return nil
+}
+
+
+func ProfileUnset(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype != MP && apptype != WEB && apptype != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := generate(appid, uuid, string(UNSET), profileParam, map[string]interface{}{}, apptype)
+	mqlxy.push(dmg)
+	return nil
+}
+
+
+func ProfileAppend(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype != MP && apptype != WEB && apptype != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := generate(appid, uuid, string(APPEND), profileParam, map[string]interface{}{}, apptype)
 	mqlxy.push(dmg)
 	return nil
 }

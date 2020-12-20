@@ -11,17 +11,17 @@ import (
 )
 
 type mq struct {
-	queue chan *dancemsg
+	queue chan interface{}
 }
 
 func newMq() *mq {
 	q := &mq{
-		queue: make(chan *dancemsg, confIns.Asynconf.Mqlen),
+		queue: make(chan interface{}, confIns.Asynconf.Mqlen),
 	}
 	return q
 }
 
-func (q *mq) push(dmg *dancemsg) {
+func (q *mq) push(dmg interface{}) {
 	go func() {
 		select {
 		case q.queue <- dmg:
@@ -35,7 +35,7 @@ func (q *mq) push(dmg *dancemsg) {
 	}()
 }
 
-func (q *mq) pop() *dancemsg {
+func (q *mq) pop() interface{}{
 	select {
 	case item := <-q.queue:
 		return item
