@@ -122,7 +122,7 @@ func ItemSet(apptype Apptype, appid int64, itemParam map[string]interface{}, ite
 	return nil
 }
 
-func ItemUnset(apptype Apptype, appid int64, itemParam map[string]interface{}) error {
+func ItemUnset(apptype Apptype, appid int64, itemParam map[string]interface{}, item Item) error {
 	//DCL,初始化MQ,执行池子.
 	if apptype != MP && apptype != WEB && apptype != APP {
 		fatal("apptype 只能为 MP WEB APP")
@@ -137,6 +137,8 @@ func ItemUnset(apptype Apptype, appid int64, itemParam map[string]interface{}) e
 			firstLock.Unlock()
 		}
 	}
+	itemParam["item_name"] = item.ItemName
+	itemParam["item_id"] = item.ItemId
 	dmg := generate(appid, "__rangers", "__item_unset", itemParam, map[string]interface{}{}, apptype)
 	mqlxy.push(dmg)
 	return nil
