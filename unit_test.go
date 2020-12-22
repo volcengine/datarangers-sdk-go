@@ -32,18 +32,18 @@ func TestAppCollect(a *testing.T) {
 		Asyn_routine:       128,
 		Headers:     		map[string]interface{}{},
 	})
-	//for i := 0; i < 1; i++ {
-	//	err := SendEvent(APP, 10000013, "2020_11_22", "old uuid", map[string]interface{}{"param": 1}, map[string]interface{}{"cuns": 1})
-	//	if err != nil {
-	//		//fmt.Println(err.Error())
-	//	}
-	//}
 	for i := 0; i < 1; i++ {
-		err := SendEventWithDevice(APP, 10000013, "2020_11_22", "old uuid", map[string]interface{}{"param": 1}, map[string]interface{}{"cuns": 1}, IOS, "121321212")
+		err := SendEvent(APP, 10000013, "2020_11_22", "old uuid", map[string]interface{}{"param": 1}, map[string]interface{}{"cuns": 1})
 		if err != nil {
 			//fmt.Println(err.Error())
 		}
 	}
+	//for i := 0; i < 1; i++ {
+	//	err := SendEventWithDevice(APP, 10000013, "2020_11_22", "old uuid", map[string]interface{}{"param": 1}, map[string]interface{}{"cuns": 1}, IOS, "121321212")
+	//	if err != nil {
+	//		fmt.Println(err.Error())
+	//	}
+	//}
 	time.Sleep(1 * time.Second)
 }
 
@@ -52,14 +52,14 @@ func TestItemCollect(a *testing.T) {
 
 	//InitByFile("sdkconf.yml")
 	InitByProperty(&Property{
-		EventSendEnable:          false,
+		EventSendEnable:          true,
 		Log_loglevel:       "debug", //log level
 		Log_path:           "sdklogs1/sensors1",
 		Log_errlogpath:     "sdklogs1/errlog1",
 		Log_maxsize:        30,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.129.5",
+		Http_addr:          "http://10.225.129.59",
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         150000,
 		Asyn_routine:       128,
@@ -84,7 +84,7 @@ func TestItemCollect(a *testing.T) {
 		itemList = append(itemList, item1 )
 		itemList = append(itemList, item2 )
 		itemList = append(itemList, item3 )
-		err := SendItem(APP, 10000013, "lxy", "buy", map[string]interface{}{"time": 1}, map[string]interface{}{}, itemList)
+		err := SendItem(APP, 10000034, "lxy", "buy", map[string]interface{}{"money": 100}, map[string]interface{}{}, itemList)
 		if err != nil {
 			//fmt.Println(err.Error())
 		}
@@ -96,14 +96,14 @@ func TestItemSetCollect(a *testing.T) {
 
 	//InitByFile("sdkconf.yml")
 	InitByProperty(&Property{
-		EventSendEnable:          false,
+		EventSendEnable:          true,
 		Log_loglevel:       "debug", //log level
 		Log_path:           "sdklogs1/sensors",
 		Log_errlogpath:     "sdklogs1/errlog",
 		Log_maxsize:        30,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.129.5",
+		Http_addr:          "http://10.225.129.59",
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         150000,
 		Asyn_routine:       128,
@@ -115,7 +115,7 @@ func TestItemSetCollect(a *testing.T) {
 		ItemId: proto.String("124"),
 	}
 	for i := 0; i < 1; i++ {
-		err := ItemSet(APP, 10000000,  map[string]interface{}{"list7":43, "list8":[]string{"bh1"}}, *item2)
+		err := ItemSet(APP, 10000034,  map[string]interface{}{"name":"老友记"}, *item2)
 		if err != nil {
 			fmt.Println(err.Error())
 		}
@@ -155,7 +155,7 @@ func TestProfileCollect(a *testing.T) {
 func TestSsid(a *testing.T){
 	InitByFile("sdkconf.yml")
 
-	threadnum := 128
+	threadnum := 400
 	client := &http.Client{
 		Transport: &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
@@ -178,16 +178,16 @@ func TestSsid(a *testing.T){
 	for i := 0; i<threadnum; i++{
 		var k = i
 		go func() {
-			for j :=0 ;j< 1000; j++{
-				newJ := j+1
-				if newJ >= 999 {
-					newJ = 999
-				}
+			for j :=0 ;j< 1; j++{
+				//newJ := j+1
+				//if newJ >= 999 {
+				//	newJ = 999
+				//}
 				head := &H{
-					Aid: "2020122014",
+					Aid: "2020122204",
 					//Openudid: strconv.Itoa(openudid[rand.Intn(100000)]),
-					Openudid: strconv.Itoa(k)+"_"+strconv.Itoa(j)+"_",
-					User_unique_id: strconv.Itoa(k)+"_"+strconv.Itoa(newJ),
+					Openudid: "0" + strconv.Itoa(k)+"_"+strconv.Itoa(j)+"_",
+					User_unique_id: strconv.Itoa(k)+"_"+strconv.Itoa(j),
 					//Openudid: "2020121410",
 					//User_unique_id: "202012167",
 				}
@@ -199,23 +199,13 @@ func TestSsid(a *testing.T){
 
 				data, _ := json.Marshal(reqestMessage)
 
-				req, _ := http.NewRequest("POST", "http://10.225.129.5:31010/service/2/device_register", strings.NewReader(string(data)))
+				req, _ := http.NewRequest("POST", "http://10.225.129.5/service/2/device_register", strings.NewReader(string(data)))
 				req.Header.Add("Content-Type", "application/json")
+				req.Host = "snssdk.vpc.com"
 				//var resp *http.Response
 				resp, err := client.Do(req)
 				if err!=nil {
 					fmt.Println("err", err.Error())
-					//for j:=0;j<5; j++{
-					//	fmt.Println("err", err.Error())
-					//	time.Sleep(1*time.Second)
-					//	req, _ := http.NewRequest("POST", "http://10.225.129.79:31010/service/2/device_register", strings.NewReader(string(data)))
-					//	req.Header.Add("Content-Type", "application/json")
-					//	//var resp *http.Response
-					//	if resp, err = client.Do(req); err == nil {
-					//		break;
-					//	}
-					//
-					//}
 				}
 				if err == nil {
 					body, _ := ioutil.ReadAll(resp.Body)
@@ -224,13 +214,13 @@ func TestSsid(a *testing.T){
 					responseMsg["user_unique_id"] = head.User_unique_id
 					responseMsg["Openuid"] = head.Openudid
 					body ,_ = json.Marshal(responseMsg)
-					//if responseMsg["ssid"] == "" {
-					//	fmt.Errorf("ssid is nil " + head.User_unique_id)
-					//	req, _ := http.NewRequest("POST", "http://10.225.129.79:31010/service/2/device_register", strings.NewReader(string(data)))
-					//	req.Header.Add("Content-Type", "application/json")
-					//	resp, err = client.Do(req)
-					//	body, _ = ioutil.ReadAll(resp.Body)
-					//}
+					if responseMsg["ssid"] == "" {
+						fmt.Errorf("ssid is nil " + head.User_unique_id)
+						//req, _ := http.NewRequest("POST", "http://10.225.129.79:31010/service/2/device_register", strings.NewReader(string(data)))
+						//req.Header.Add("Content-Type", "application/json")
+						//resp, err = client.Do(req)
+						//body, _ = ioutil.ReadAll(resp.Body)
+					}
 					errlogger.Println(string(body))
 				}
 			}
