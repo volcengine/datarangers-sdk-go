@@ -122,22 +122,22 @@ func (p *mcsCollector) send(dmsg interface{}) error {
 	return err
 }
 
-func collectsync(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
-	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype)
-	if err := appcollector.send(dmg); err != nil {
-		data, a := json.Marshal(dmg)
-		if a != nil {
-			warn(err.Error() + "消息未发送成功")
-			return a
-		}
-		errlogger.Println(string(data))
-		return err
-	}
-	return nil
-}
+//func collectsync(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
+//	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype)
+//	if err := appcollector.send(dmg); err != nil {
+//		data, a := json.Marshal(dmg)
+//		if a != nil {
+//			warn(err.Error() + "消息未发送成功")
+//			return a
+//		}
+//		errlogger.Println(string(data))
+//		return err
+//	}
+//	return nil
+//}
 
 
-func generate(appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, apptype1 Apptype) *ServerSdkEventMessage {
+func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, apptype1 Apptype) *ServerSdkEventMessage {
 	hd := &Header{
 		Aid:            proto.Int64(appid),
 		Custom:         custom,
@@ -145,21 +145,24 @@ func generate(appid int64, uuid string, eventname string, eventParam map[string]
 		User_unique_id: proto.String(uuid),
 		Timezone:       proto.Int(timezone),
 	}
-
-	timeObj := time.Unix(time.Now().Unix(), 0)
-	itm := &Event_v3{
-		Datetime:    proto.String(timeObj.Format("2006-01-02 15:04:05")),
-		Event:       proto.String(eventname),
-		LocalTimeMs: proto.Int64(time.Now().UnixNano() / 1e6),
-		Params:      eventParam,
-	}
 	dmg := &ServerSdkEventMessage{
 		App_id:         proto.Int64(appid),
 		User_unique_id: proto.String(uuid),
 		App_type:       proto.String(string(apptype1)),
 		Device_id:      proto.Int64(1),
 	}
-	dmg.Event_v3 = []*Event_v3{itm}
+	timeObj := time.Unix(time.Now().Unix(), 0)
+	var sendEventV3 []*Event_v3
+	for i, eventname := range eventnameList{
+		itm := &Event_v3{
+			Datetime:    proto.String(timeObj.Format("2006-01-02 15:04:05")),
+			Event:       proto.String(eventname),
+			LocalTimeMs: proto.Int64(time.Now().UnixNano() / 1e6),
+			Params:      eventParam[i],
+		}
+		sendEventV3 = append(sendEventV3, itm)
+	}
+	dmg.Event_v3 = sendEventV3
 	dmg.Header = hd
 	return dmg
 }
