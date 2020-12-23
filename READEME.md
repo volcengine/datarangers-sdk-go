@@ -28,3 +28,8 @@
 将内部数据格式设置为public。
 增加了Item上报事件接口。
 增加了设置ItemSet ItemUnset接口。
+
+##2020.12.23
+1. 增加批量上报Event的接口 sendEvents
+2. 修改ProfileUnset的接口定义。
+3. 修改ItemSet与ItemUnset的定义。

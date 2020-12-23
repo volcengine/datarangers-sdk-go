@@ -10,7 +10,9 @@ package datarangers_sdk
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/golang/protobuf/proto"
+	"strconv"
 )
 
 /**
@@ -32,10 +34,39 @@ func SendEvent(apptype Apptype, appid int64, uuid string, eventname string, even
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype)
+	dmg := getServerSdkEventMessage(appid, uuid, []string{eventname}, []map[string]interface{}{eventParam}, custom, apptype)
 	mqlxy.push(dmg)
 	return nil
 }
+
+
+/**
+eventParam : 事件属性
+custom     : 用户自定义事件公共属性
+*/
+func SendEvents(apptype Apptype, appid int64, uuid string, eventnameList []string, eventParamList []map[string]interface{}, custom map[string]interface{}) error {
+	//DCL,初始化MQ,执行池子.
+	if apptype != MP && apptype != WEB && apptype != APP {
+		fatal("apptype 只能为 MP WEB APP")
+		return nil
+	}
+	if len(eventnameList) != len(eventParamList) {
+		return fmt.Errorf("事件数目与 属性数目对不上")
+	}
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := getServerSdkEventMessage(appid, uuid, eventnameList, eventParamList, custom, apptype)
+	mqlxy.push(dmg)
+	return nil
+}
+
 
 /**
 profileAction ：用户公共属性操作类型
@@ -60,18 +91,14 @@ func SendProfile(apptype Apptype, appid int64, uuid string, profileAction Profil
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(profileAction), profileParam, map[string]interface{}{}, apptype)
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(profileAction)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype)
 	mqlxy.push(dmg)
 	return nil
 }
 
+//
+func SendItem(appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, itemList []*Item) error {
 
-func SendItem(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, itemList []*Item) error {
-	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
-	}
 	if isFirst {
 		firstLock.Lock()
 		if isFirst {
@@ -82,7 +109,7 @@ func SendItem(apptype Apptype, appid int64, uuid string, eventname string, event
 		}
 	}
 	generateItem(eventParam, itemList)
-	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype)
+	dmg := getServerSdkEventMessage(appid, uuid, []string{eventname}, []map[string]interface{}{eventParam}, custom, APP)
 	mqlxy.push(dmg)
 	return nil
 }
@@ -100,12 +127,8 @@ func generateItem(eventParam map[string]interface{}, itemList []*Item) {
 }
 
 
-func ItemSet(apptype Apptype, appid int64, itemParam map[string]interface{}, item Item) error {
+func ItemSet(appid int64, itemName string, itemParamList []map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
-	}
 	if isFirst {
 		firstLock.Lock()
 		if isFirst {
@@ -115,42 +138,36 @@ func ItemSet(apptype Apptype, appid int64, itemParam map[string]interface{}, ite
 			firstLock.Unlock()
 		}
 	}
-	itemParam["item_name"] = item.ItemName
-	itemParam["item_id"] = item.ItemId
-	dmg := generate(appid, "__rangers", "__item_set", itemParam, map[string]interface{}{}, apptype)
-	mqlxy.push(dmg)
-	return nil
-}
-
-func ItemUnset(apptype Apptype, appid int64, itemParam map[string]interface{}, item Item) error {
-	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
+	if ok := checkItemParamList(itemName, itemParamList); !ok{
+		return fmt.Errorf("itemParam Must contains Id &&& id must be string")
 	}
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
-	itemParam["item_name"] = item.ItemName
-	itemParam["item_id"] = item.ItemId
-	dmg := generate(appid, "__rangers", "__item_unset", itemParam, map[string]interface{}{}, apptype)
+	dmg := getServerSdkEventMessage(appid, "__rangers", []string{"__item_set"}, itemParamList, map[string]interface{}{}, APP)
 	mqlxy.push(dmg)
 	return nil
 }
 
 
-func ProfileSet(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
-	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
+func checkItemParamList(itemName string, itemParamList []map[string]interface{}) bool {
+	for _, itemMap := range itemParamList{
+		if id, ok := itemMap["id"]; ok{
+			if intId, ok:= id.(int); ok {
+				id = strconv.Itoa(intId)
+			}
+			if _, ok:= id.(string); !ok {
+				return false
+			}
+			itemMap["item_id"] = id
+			itemMap["item_name"] = itemName
+			delete(itemMap, "id")
+		}else{
+			return false
+		}
 	}
+	return true
+}
+
+func ItemUnset(appid int64, itemName string, id string, removeKeyList []string) error {
+	//DCL,初始化MQ,执行池子.
 	if isFirst {
 		firstLock.Lock()
 		if isFirst {
@@ -160,18 +177,20 @@ func ProfileSet(apptype Apptype, appid int64, uuid string, profileParam map[stri
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(SET), profileParam, map[string]interface{}{}, apptype)
+	itemParam := map[string]interface{}{}
+	itemParam["item_name"] = itemName
+	itemParam["item_id"] = id
+	for _, key := range removeKeyList{
+		itemParam[key] = 1
+	}
+	dmg := getServerSdkEventMessage(appid, "__rangers", []string{"__item_unset"}, []map[string]interface{}{itemParam}, map[string]interface{}{}, APP)
 	mqlxy.push(dmg)
 	return nil
 }
 
 
-func ProfileSetOnce(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+func ProfileSet( appid int64, uuid string, profileParam map[string]interface{}) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
-	}
 	if isFirst {
 		firstLock.Lock()
 		if isFirst {
@@ -181,18 +200,13 @@ func ProfileSetOnce(apptype Apptype, appid int64, uuid string, profileParam map[
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(SET_ONCE), profileParam, map[string]interface{}{}, apptype)
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(SET)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, APP)
 	mqlxy.push(dmg)
 	return nil
 }
 
 
-func ProfileIncrement(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
-	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
-	}
+func ProfileSetOnce( appid int64, uuid string, profileParam map[string]interface{}) error {
 	if isFirst {
 		firstLock.Lock()
 		if isFirst {
@@ -202,18 +216,13 @@ func ProfileIncrement(apptype Apptype, appid int64, uuid string, profileParam ma
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(INCREAMENT), profileParam, map[string]interface{}{}, apptype)
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(SET_ONCE)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, APP)
 	mqlxy.push(dmg)
 	return nil
 }
 
 
-func ProfileUnset(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
-	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
-	}
+func ProfileIncrement( appid int64, uuid string, profileParam map[string]interface{}) error {
 	if isFirst {
 		firstLock.Lock()
 		if isFirst {
@@ -223,18 +232,15 @@ func ProfileUnset(apptype Apptype, appid int64, uuid string, profileParam map[st
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(UNSET), profileParam, map[string]interface{}{}, apptype)
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(INCREAMENT)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, APP)
 	mqlxy.push(dmg)
 	return nil
 }
 
 
-func ProfileAppend(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}) error {
+func ProfileUnset(appid int64, uuid string, profileNameList []string) error {
 	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
-	}
+
 	if isFirst {
 		firstLock.Lock()
 		if isFirst {
@@ -244,7 +250,27 @@ func ProfileAppend(apptype Apptype, appid int64, uuid string, profileParam map[s
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, string(APPEND), profileParam, map[string]interface{}{}, apptype)
+	profileParam := map[string]interface{}{}
+	for _, name := range profileNameList{
+		profileParam[name] = 1
+	}
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(UNSET)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, APP)
+	mqlxy.push(dmg)
+	return nil
+}
+
+
+func ProfileAppend(appid int64, uuid string, profileParam map[string]interface{}) error {
+	if isFirst {
+		firstLock.Lock()
+		if isFirst {
+			initAsyn()
+			isFirst = false
+			debug("init goroutine pool success")
+			firstLock.Unlock()
+		}
+	}
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(APPEND)},  []map[string]interface{}{profileParam}, map[string]interface{}{}, APP)
 	mqlxy.push(dmg)
 	return nil
 }
@@ -271,7 +297,7 @@ func SendEventWithDevice(apptype Apptype, appid int64, uuid string, eventname st
 			firstLock.Unlock()
 		}
 	}
-	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype)
+	dmg := getServerSdkEventMessage(appid, uuid, []string{eventname}, []map[string]interface{}{eventParam}, custom, apptype)
 	//tmp, _ := json.Marshal(dmg)
 	//debug("上报的 json 为 -> : " + string(tmp))
 	if device == "ANDROID" {
