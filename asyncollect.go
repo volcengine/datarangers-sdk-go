@@ -141,7 +141,12 @@ func ItemSet(appid int64, itemName string, itemParamList []map[string]interface{
 	if ok := checkItemParamList(itemName, itemParamList); !ok{
 		return fmt.Errorf("itemParam Must contains Id &&& id must be string")
 	}
-	dmg := getServerSdkEventMessage(appid, "__rangers", []string{"__item_set"}, itemParamList, map[string]interface{}{}, APP)
+	//TODO 批量set 失效。
+	batch := []string{}
+	for i:=0; i< len(itemParamList); i++{
+		batch =append(batch, "__item_set")
+	}
+	dmg := getServerSdkEventMessage(appid, "__rangers", batch, itemParamList, map[string]interface{}{}, APP)
 	mqlxy.push(dmg)
 	return nil
 }

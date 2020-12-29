@@ -19,32 +19,27 @@ func TestAppCollect(a *testing.T) {
 
 	//InitByFile("sdkconf.yml")
 	InitByProperty(&Property{
-		EventSendEnable:          true,
-		Log_loglevel:       "debug", //log level
-		Log_path:           "sdklogs1/sensors1",
-		Log_errlogpath:     "sdklogs1/errlog1",
-		Log_maxsize:        30,  //Mb
+		EventSendEnable:          false,
+		Log_loglevel:       "warn", //log level
+		Log_path:           "log/rangers.log",
+		Log_errlogpath:     "log/errlog1",
+		Log_maxsize:        3000,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.129.59",
+		Http_addr:          "http://10.225.129.5",
 		Http_socketTimeOut: 10,
-		Asyn_mqlen:         150000,
+		Asyn_mqlen:         10000000,
 		Asyn_routine:       128,
 		Headers:     		map[string]interface{}{},
 	})
-	//for i := 0; i < 1; i++ {
-	//	err := SendEvent(APP, 10000013, "2020_11_22", "old uuid", map[string]interface{}{"param": 1}, map[string]interface{}{"cuns": 1})
-	//	if err != nil {
-	//		//fmt.Println(err.Error())
-	//	}
-	//}
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 10000000; i++ {
 		//err := SendEventWithDevice(APP, 10000013, "2020_11_22", "old uuid", map[string]interface{}{"param": 1}, map[string]interface{}{"cuns": 1}, IOS, "121321212")
 		//if err != nil {
 		//	fmt.Println(err.Error())
 		//}
 
 		SendEvents(APP, 10000013, "2020_11_22", []string{"event1", "event2"}, []map[string]interface{}{{"event1param": 1}, {"event2param":2}}, map[string]interface{}{"cuns": 1})
+		fmt.Println(i)
 	}
 	time.Sleep(1 * time.Second)
 }
@@ -113,13 +108,12 @@ func TestItemSetCollect(a *testing.T) {
 	})
 
 	for i := 0; i < 1; i++ {
-		err := ItemSet( 10000034, "book", []map[string]interface{}{{"id":124, "time11":"死亡之舞2"}})
+		err := ItemSet( 10000034, "book", []map[string]interface{}{{"id":124, "time11":"死亡之舞2"},{"id":124, "time11":"死亡之舞2"},{"id":124, "time11":"死亡之舞2"},{"id":124, "time11":"死亡之舞2"},{"id":124, "time11":"死亡之舞2"},{"id":124, "time11":"死亡之舞2"},{"id":124, "time11":"死亡之舞2"},{"id":124, "time11":"死亡之舞2"},{"id":124, "time11":"死亡之舞2"}})
 		if err != nil {
 			fmt.Println(err.Error())
 		}
 	}
-	ItemUnset( 10000034, "book", "124", []string{"time"})
-
+	//ItemUnset( 10000034, "book", "124", []string{"time"})
 	time.Sleep(1 * time.Second)
 }
 
