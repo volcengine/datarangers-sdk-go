@@ -341,7 +341,7 @@ type Property struct {
 	Log_maxsbackup     uint32
 	Log_maxage         uint32
 	Log_loglevel       string
-	Http_addr          string //#上报的IP 或 域名, http://10.225.130.127
+	Http_addr          string //#上报的IP 或 域名
 	Http_socketTimeOut int    //
 	Headers            map[string]interface{}
 	Asyn_routine       uint32
