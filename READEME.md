@@ -33,3 +33,6 @@
 1. 增加批量上报Event的接口 sendEvents
 2. 修改ProfileUnset的接口定义。
 3. 修改ItemSet与ItemUnset的定义。
+
+##2021.02.24
+1. 修改了did为1的问题

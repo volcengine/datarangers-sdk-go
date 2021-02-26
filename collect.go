@@ -141,7 +141,7 @@ func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, 
 	hd := &Header{
 		Aid:            proto.Int64(appid),
 		Custom:         custom,
-		Device_id:      proto.Int64(1),
+		Device_id:      proto.Int64(0),
 		User_unique_id: proto.String(uuid),
 		Timezone:       proto.Int(timezone),
 	}
@@ -149,7 +149,7 @@ func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, 
 		App_id:         proto.Int64(appid),
 		User_unique_id: proto.String(uuid),
 		App_type:       proto.String(string(apptype1)),
-		Device_id:      proto.Int64(1),
+		Device_id:      proto.Int64(0),
 	}
 	timeObj := time.Unix(time.Now().Unix(), 0)
 	var sendEventV3 []*Event_v3
