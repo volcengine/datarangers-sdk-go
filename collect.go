@@ -86,6 +86,7 @@ func (p *mcsCollector) send(dmsg interface{}) error {
 	if err != nil {
 		warn(err.Error() + "    消息未发送成功, 重试一次")
 		resp, err = p.mscHttpClient.Do(req)
+		defer resp.Body.Close()
 		if err != nil {
 			warn(err.Error() + "    重试时 未发送成功 ")
 		}
@@ -143,7 +144,7 @@ func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, 
 		Custom:         custom,
 		Device_id:      proto.Int64(0),
 		User_unique_id: proto.String(uuid),
-		Timezone:       proto.Int(timezone),
+		Timezone:       proto.Int32(int32(timezone)),
 	}
 	dmg := &ServerSdkEventMessage{
 		App_id:         proto.Int64(appid),
