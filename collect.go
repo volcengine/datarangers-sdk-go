@@ -138,11 +138,15 @@ func (p *mcsCollector) send(dmsg interface{}) error {
 //}
 
 
-func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, apptype1 Apptype) *ServerSdkEventMessage {
+func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, apptype1 Apptype, device_id ...int64) *ServerSdkEventMessage {
+	var webid int64
+	if len(device_id) != 0 {
+		webid = device_id[0]
+	}
 	hd := &Header{
 		Aid:            proto.Int64(appid),
 		Custom:         custom,
-		Device_id:      proto.Int64(0),
+		Device_id:      proto.Int64(webid),
 		User_unique_id: proto.String(uuid),
 		Timezone:       proto.Int32(int32(timezone)),
 	}
@@ -150,7 +154,7 @@ func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, 
 		App_id:         proto.Int64(appid),
 		User_unique_id: proto.String(uuid),
 		App_type:       proto.String(string(apptype1)),
-		Device_id:      proto.Int64(0),
+		Device_id:      proto.Int64(webid),
 	}
 	timeObj := time.Unix(time.Now().Unix(), 0)
 	var sendEventV3 []*Event_v3
