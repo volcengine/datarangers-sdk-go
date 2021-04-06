@@ -143,6 +143,10 @@ func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, 
 	if len(device_id) != 0 {
 		webid = device_id[0]
 	}
+	if custom == nil{
+		custom = map[string]interface{}{}
+	}
+	custom["__sdk_platform"] = "datarangers_server_sdk_go_v1.0.4"
 	hd := &Header{
 		Aid:            proto.Int64(appid),
 		Custom:         custom,
