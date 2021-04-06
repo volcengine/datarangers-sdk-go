@@ -19,7 +19,7 @@ func TestAppCollect(a *testing.T) {
 		Log_maxsize:        3000,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.130.66",
+		Http_addr:          "http://xx.xxx.xxx.xx",
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         10000000,
 		Asyn_routine:       128,
@@ -45,12 +45,12 @@ func TestItemCollect(a *testing.T) {
 	InitByProperty(&Property{
 		EventSendEnable:          true,
 		Log_loglevel:       "debug", //log level
-		Log_path:           "sdklogs1/sensors1",
+		Log_path:           "sdklogs1/rangers",
 		Log_errlogpath:     "sdklogs1/errlog1",
 		Log_maxsize:        30,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.129.59",
+		Http_addr:          "http://xx.xxx.xxx.xx",
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         150000,
 		Asyn_routine:       128,
@@ -89,12 +89,12 @@ func TestItemSetCollect(a *testing.T) {
 	InitByProperty(&Property{
 		EventSendEnable:          true,
 		Log_loglevel:       "debug", //log level
-		Log_path:           "sdklogs1/sensors",
+		Log_path:           "sdklogs1/rangers",
 		Log_errlogpath:     "sdklogs1/errlog",
 		Log_maxsize:        30,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.129.59",
+		Http_addr:          "http://xx.xxx.xxx.xx",
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         150000,
 		Asyn_routine:       128,
@@ -119,12 +119,12 @@ func TestProfileCollect(a *testing.T) {
 	InitByProperty(&Property{
 		EventSendEnable:          true,
 		Log_loglevel:       "debug", //log level
-		Log_path:           "sdklogs1/sensors",
+		Log_path:           "sdklogs1/rangers.log",
 		Log_errlogpath:     "sdklogs1/errlog",
 		Log_maxsize:        30,  //Mb
 		Log_maxage:         100, //days
 		Log_maxsbackup:     100, //count
-		Http_addr:          "http://10.225.129.59",
+		Http_addr:          "http://xx.xxx.xxx.xx",
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         150000,
 		Asyn_routine:       10,
