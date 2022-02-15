@@ -1,0 +1,16 @@
+Log:
+  eventsendenable: false
+  path: log/sensors.log
+  errlogpath: log/id.log
+  maxsize: 100     #Mb
+  maxsbackup: 10 #日志最多保存数目
+  maxage: 60  #days
+  loglevel: debug
+Http:
+  addr: http://doman  #上报的IP 或 域名
+  timeout: 30 # secenods
+Headers:       #发送的header头,用户自己定义
+  host: snssdk.vpc.com
+Asyn:
+  routine: 1024   #建议小于1024，并发数目
+  mqlen: 200000
