@@ -1,4 +1,5 @@
 package datarangers_sdk
+
 /**
  *	Copyright 2020 Beijing Volcano Engine Technology Co., Ltd.
  *	Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -6,24 +7,24 @@ package datarangers_sdk
  *	Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 type ServerSdkEventMessage struct {
-	Api_request_id  *string   `json:"_api_request_id,omitempty"`
-	Http_host       *string   `json:"_http_host,omitempty"`
-	Client_ip       *string   `json:"client_ip,omitempty"`
-	Device_id       *int64    `json:"device_id,omitempty"`
-	Header          *Header   `json:"header"`
-	TimeSync        *TimeSync `json:"time_sync,omitempty"`
-	Trace_id        *string   `json:"trace_id,omitempty"`
-	U_id            *string   `json:"u_id,omitempty"`
-	User_id         *string   `json:"user_id,omitempty"`
-	Event_v3        []*Event_v3  `json:"event_v3,omitempty"`
-	Api_time        *int64    `json:"api_time,omitempty"`
-	Http_user_agent *string   `json:"http_user_agent,omitempty"`
-	User_is_auth    *int64    `json:"user_is_auth,omitempty"`
-	Ut              *int64    `json:"ut,omitempty"`
-	App_type        *string   `json:"app_type"`
-	Format_name     *string   `json:"_format_name,omitempty"`
-	App_id          *int64    `json:"app_id"`
-	User_unique_id  *string   `json:"user_unique_id,omitempty"`
+	Api_request_id  *string     `json:"_api_request_id,omitempty"`
+	Http_host       *string     `json:"_http_host,omitempty"`
+	Client_ip       *string     `json:"client_ip,omitempty"`
+	Device_id       *int64      `json:"device_id,omitempty"`
+	Header          *Header     `json:"header"`
+	TimeSync        *TimeSync   `json:"time_sync,omitempty"`
+	Trace_id        *string     `json:"trace_id,omitempty"`
+	U_id            *string     `json:"u_id,omitempty"`
+	User_id         *string     `json:"user_id,omitempty"`
+	Event_v3        []*Event_v3 `json:"event_v3,omitempty"`
+	Api_time        *int64      `json:"api_time,omitempty"`
+	Http_user_agent *string     `json:"http_user_agent,omitempty"`
+	User_is_auth    *int64      `json:"user_is_auth,omitempty"`
+	Ut              *int64      `json:"ut,omitempty"`
+	App_type        *string     `json:"app_type"`
+	Format_name     *string     `json:"_format_name,omitempty"`
+	App_id          *int64      `json:"app_id"`
+	User_unique_id  *string     `json:"user_unique_id,omitempty"`
 }
 
 type Header struct {
@@ -76,6 +77,7 @@ type Event_v3 struct {
 	Event           *string     `json:"event,omitempty"`
 	EventId         *string     `json:"event_id,omitempty"`
 	LocalTimeMs     *int64      `json:"local_time_ms,omitempty"`
+	AbSdkVersion    *string     `json:"ab_sdk_version,omitempty"`
 	SessionId       *string     ` json:"session_id,omitempty"`
 	UserId          *string     `json:"user_id,omitempty"`
 	Tea_event_index *int64      `json:"tea_event_index,omitempty"`
@@ -83,6 +85,6 @@ type Event_v3 struct {
 }
 
 type Item struct {
-	ItemName        *string
-	ItemId        	*string
+	ItemName *string
+	ItemId   *string
 }

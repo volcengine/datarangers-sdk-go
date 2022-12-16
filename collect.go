@@ -83,10 +83,15 @@ func (p *mcsCollector) send(dmsg interface{}) error {
 	//其余的都上报。
 	var resp *http.Response
 	resp, err = p.mscHttpClient.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		warn(err.Error() + "    消息未发送成功, 重试一次")
 		resp, err = p.mscHttpClient.Do(req)
-		defer resp.Body.Close()
+		if resp != nil && resp.Body != nil {
+			defer resp.Body.Close()
+		}
 		if err != nil {
 			warn(err.Error() + "    重试时 未发送成功 ")
 		}
@@ -112,13 +117,8 @@ func (p *mcsCollector) send(dmsg interface{}) error {
 					fatal("数据未上报到applog, 返回body为" + string(body))
 					return fmt.Errorf("数据未上报到applog")
 				}
-				resp.Body.Close()
 			}
 		}
-	}
-	if resp != nil && resp.Body != nil {
-		ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
 	}
 	return err
 }
@@ -137,16 +137,15 @@ func (p *mcsCollector) send(dmsg interface{}) error {
 //	return nil
 //}
 
-
-func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, apptype1 Apptype, device_id ...int64) *ServerSdkEventMessage {
+func getServerSdkEventWithAbMessage(appid int64, uuid string, abSdkVersionList []string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, apptype1 Apptype, device_id ...int64) *ServerSdkEventMessage {
 	var webid int64
 	if len(device_id) != 0 {
 		webid = device_id[0]
 	}
-	if custom == nil{
+	if custom == nil {
 		custom = map[string]interface{}{}
 	}
-	custom["__sdk_platform"] = "datarangers_server_sdk_go_v1.0.4"
+	custom["__sdk_platform"] = "datarangers_server_sdk_go_v1.0.5"
 	hd := &Header{
 		Aid:            proto.Int64(appid),
 		Custom:         custom,
@@ -162,18 +161,25 @@ func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, 
 	}
 	timeObj := time.Unix(time.Now().Unix(), 0)
 	var sendEventV3 []*Event_v3
-	for i, eventname := range eventnameList{
+	for i, eventname := range eventnameList {
 		itm := &Event_v3{
 			Datetime:    proto.String(timeObj.Format("2006-01-02 15:04:05")),
 			Event:       proto.String(eventname),
 			LocalTimeMs: proto.Int64(time.Now().UnixNano() / 1e6),
 			Params:      eventParam[i],
 		}
+		if abSdkVersionList != nil {
+			itm.AbSdkVersion = proto.String(abSdkVersionList[i])
+		}
 		sendEventV3 = append(sendEventV3, itm)
 	}
 	dmg.Event_v3 = sendEventV3
 	dmg.Header = hd
 	return dmg
+}
+
+func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, apptype1 Apptype, device_id ...int64) *ServerSdkEventMessage {
+	return getServerSdkEventWithAbMessage(appid, uuid, nil, eventnameList, eventParam, custom, apptype1, device_id...)
 }
 
 func getTimezone() int {
