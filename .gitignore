@@ -3,4 +3,5 @@
 ### macOS ###
 *.DS_Store
 *.iml
+logs/*
 

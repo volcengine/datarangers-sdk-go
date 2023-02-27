@@ -1,0 +1,11 @@
+sdk:
+  mode: http
+  env: saas_native # 设置环境信息为saas 云原生
+#  logLevel: debug
+http:
+  addr: https://gator.volces.com  #上报的IP 或 域名
+appKeys:
+  ${APP_ID}: ${APP_KEY}
+#asyn:
+#  routine: 20   #建议小于1024，并发数目
+#  queueSize: 10240

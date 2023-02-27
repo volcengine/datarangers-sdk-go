@@ -1,0 +1,12 @@
+sdk:
+  mode: file
+#  logLevel: debug
+file:
+  path: logs1/datarangers.log
+  errPath: logs1/error-datarangers.log
+#  maxSize: 100     #Mb
+#  maxBackups: 10 #日志最多保存数目
+#  maxAge: 60  #days
+#asyn:
+#  routine: 20   #建议小于1024，并发数目
+#  queueSize: 10240

@@ -2,7 +2,7 @@ package datarangers_sdk
 
 import (
 	"fmt"
-	"github.com/golang/protobuf/proto"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -19,7 +19,7 @@ func TestAppCollect(a *testing.T) {
 		Log_maxsize:        3000, //Mb
 		Log_maxage:         100,  //days
 		Log_maxsbackup:     100,  //count
-		Http_addr:          "http://xx.xxx.xxx.xx",
+		Http_addr:          os.Getenv("DOMAIN"),
 		Http_socketTimeOut: 10,
 		Asyn_mqlen:         10000000,
 		Asyn_routine:       128,
@@ -82,16 +82,16 @@ func TestItemCollect(a *testing.T) {
 
 	for i := 0; i < 1; i++ {
 		item1 := &Item{
-			ItemName: proto.String("phone"),
-			ItemId:   proto.String("123"),
+			ItemName: PtrString("phone"),
+			ItemId:   PtrString("123"),
 		}
 		item2 := &Item{
-			ItemName: proto.String("book"),
-			ItemId:   proto.String("124"),
+			ItemName: PtrString("book"),
+			ItemId:   PtrString("124"),
 		}
 		item3 := &Item{
-			ItemName: proto.String("book"),
-			ItemId:   proto.String("125"),
+			ItemName: PtrString("book"),
+			ItemId:   PtrString("125"),
 		}
 
 		itemList := []*Item{}
@@ -100,7 +100,7 @@ func TestItemCollect(a *testing.T) {
 		itemList = append(itemList, item3)
 		err := SendItem(10000034, "lxy", "buy", map[string]interface{}{"money": 100}, map[string]interface{}{}, itemList)
 		if err != nil {
-			//fmt.Println(err.Error())
+			fmt.Println(err.Error())
 		}
 	}
 	time.Sleep(1 * time.Second)

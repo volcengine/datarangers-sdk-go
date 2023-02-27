@@ -1,5 +1,7 @@
 package datarangers_sdk
 
+import "net/http"
+
 /**
  *	Copyright 2020 Beijing Volcano Engine Technology Co., Ltd.
  *	Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -8,26 +10,29 @@ package datarangers_sdk
  */
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 
-	//"io/ioutil"
 	"net"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
 )
 
+const PATH_SDK_LOG = "/sdk/log"
+const PATH_SDK_LIST = "/sdk/list"
+const PATH_EVENT_JSON = "/v2/event/json"
+const PATH_EVENT_LIST = "/v2/event/list"
+const PATH_USER_ATTR = "/dataprofile/openapi/v1/%d/users/%s/attributes"
+const PATH_ITEM_ATTR = "/dataprofile/openapi/v1/%d/items/%s/%s/attributes"
+
 type mcsCollector struct {
-	mscUrl        string
 	mscHttpClient *http.Client
 }
 
-func newMcsCollector(mcsUrl string) (collector *mcsCollector) {
+func newMcsCollector() (collector *mcsCollector) {
 	collector = &mcsCollector{
-		mscUrl: mcsUrl,
 		mscHttpClient: &http.Client{
 			Transport: &http.Transport{
 				Dial: func(network, addr string) (net.Conn, error) {
@@ -43,22 +48,223 @@ func newMcsCollector(mcsUrl string) (collector *mcsCollector) {
 	return
 }
 
+//sendBatch
+// 批量发送
+func (p *mcsCollector) sendBatch(dmsgs []interface{}) error {
+	var err error
+	// File 模式
+	if MODE_FILE == confIns.SdkConfig.Mode {
+		return fmt.Errorf("batch not support mode: %s", confIns.SdkConfig.Mode)
+	} else if MODE_HTTP == confIns.SdkConfig.Mode {
+		switch confIns.SdkConfig.Env {
+		case ENV_PRI:
+			err = p.priSendEventBatch(dmsgs)
+			break
+		case ENV_SAAS_NATIVE:
+			err = p.saasNativeSendEventBatch(dmsgs)
+			break
+		default:
+			fatal(fmt.Sprintf("not support env: %s", confIns.SdkConfig.Env))
+			return fmt.Errorf("not support env: %s", confIns.SdkConfig.Env)
+		}
+
+		return err
+	}
+	//其余的不支持
+	fatal(fmt.Sprintf("batch not support mode: %s", confIns.SdkConfig.Mode))
+	return fmt.Errorf("btach not support mode: %s", confIns.SdkConfig.Mode)
+}
+
 func (p *mcsCollector) send(dmsg interface{}) error {
+	var err error
+	// File 模式
+	if MODE_FILE == confIns.SdkConfig.Mode {
+		data, err := json.Marshal(dmsg)
+		if err != nil {
+			fatal(err.Error())
+			return err
+		}
+		debug("save success！saved json: " + string(data))
+		fileWriter.Println(string(data))
+		return nil
+	} else if MODE_HTTP == confIns.SdkConfig.Mode {
+		switch confIns.SdkConfig.Env {
+		case ENV_PRI:
+			err = p.priSendEvent(dmsg)
+			break
+		case ENV_SAAS:
+			err = p.saasSend(dmsg.(*ServerSdkEventMessage))
+			break
+		case ENV_SAAS_NATIVE:
+			err = p.saasNativeSendEvent(dmsg.(*ServerSdkEventMessage))
+			break
+		default:
+			fatal(fmt.Sprintf("not support env: %s", confIns.SdkConfig.Env))
+			return fmt.Errorf("not support env: %s", confIns.SdkConfig.Env)
+		}
+
+		return err
+	}
+	//其余的不支持
+	fatal(fmt.Sprintf("not support mode: %s", confIns.SdkConfig.Mode))
+	return fmt.Errorf("not support mode: %s", confIns.SdkConfig.Mode)
+}
+
+func (p *mcsCollector) priSendEvent(dmsg interface{}) error {
 	data, err := json.Marshal(dmsg)
 	if err != nil {
 		fatal(err.Error())
 		return err
 	}
-	req, err := http.NewRequest("POST", p.mscUrl, strings.NewReader(string(data)))
+	url := confIns.HttpConfig.HttpAddr + PATH_SDK_LOG
+	return p.request("POST", url, data, nil)
+}
+
+func (p *mcsCollector) priSendEventBatch(dmsg []interface{}) error {
+	data, err := json.Marshal(dmsg)
+	if err != nil {
+		fatal(err.Error())
+		return err
+	}
+	url := confIns.HttpConfig.HttpAddr + PATH_SDK_LIST
+	return p.request("POST", url, data, nil)
+}
+
+func (p *mcsCollector) saasNativeSendEvent(dmsg *ServerSdkEventMessage) error {
+	appKey, ok := confIns.AppKeys[*dmsg.AppId]
+	if !ok {
+		panic("App key cannot be empty. appId: " + strconv.Itoa(int(*dmsg.AppId)))
+	}
+	snam := CreateSaasNativeAppMessage(*dmsg)
+	data, err := json.Marshal(snam)
+	if err != nil {
+		fatal(err.Error())
+		return err
+	}
+	customHeaders := map[string]string{
+		APP_KEY: appKey,
+	}
+	url := confIns.HttpConfig.HttpAddr + PATH_SDK_LOG
+	return p.request("POST", url, data, customHeaders)
+}
+
+func (p *mcsCollector) saasNativeSendEventBatch(dmsgs []interface{}) error {
+	dmsg := dmsgs[0].(*ServerSdkEventMessage)
+	appKey, ok := confIns.AppKeys[*dmsg.AppId]
+	if !ok {
+		panic("App key cannot be empty. appId: " + strconv.Itoa(int(*dmsg.AppId)))
+	}
+	snams := CreateSaasNativeAppMessages(dmsgs)
+	data, err := json.Marshal(snams)
+	if err != nil {
+		fatal(err.Error())
+		return err
+	}
+	customHeaders := map[string]string{
+		APP_KEY: appKey,
+	}
+	url := confIns.HttpConfig.HttpAddr + PATH_SDK_LIST
+	return p.request("POST", url, data, customHeaders)
+}
+
+func (p *mcsCollector) saasSend(dmsg *ServerSdkEventMessage) error {
+	// 判断类型
+
+	err := errors.New("server error")
+	switch dmsg.MessageType {
+	case MESSAGE_USER:
+		err = p.saasSendUserProfile(dmsg)
+		break
+	case MESSAGE_ITEM:
+		err = p.saasSendItemProfile(dmsg)
+		break
+	default:
+		err = p.saasSendEvent(dmsg)
+	}
+	return err
+}
+
+// 上报事件
+func (p *mcsCollector) saasSendEvent(dmsg *ServerSdkEventMessage) error {
+	appKey, ok := confIns.AppKeys[*dmsg.AppId]
+	if !ok {
+		panic("App key cannot be empty. appId: " + strconv.Itoa(int(*dmsg.AppId)))
+	}
+	ssam := CreateSaasServerAppMessage(dmsg)
+	data, err := json.Marshal(ssam)
+	if err != nil {
+		fatal(err.Error())
+		return err
+	}
+	url := confIns.HttpConfig.HttpAddr + PATH_EVENT_JSON
+	customHeaders := map[string]string{
+		APP_KEY: appKey,
+	}
+	return p.request("POST", url, data, customHeaders)
+}
+
+// 上报用户属性
+func (p *mcsCollector) saasSendUserProfile(dmsg *ServerSdkEventMessage) error {
+	spam := CreateSaasProfileAppMessage(dmsg)
+	data, err := json.Marshal(spam)
+	if err != nil {
+		fatal(err.Error())
+		return err
+	}
+	uriPath := fmt.Sprintf(PATH_USER_ATTR, *dmsg.AppId, *dmsg.UserUniqueId)
+	url := confIns.OpenapiConfig.HttpAddr + uriPath
+	method := "PUT"
+	authorization := Sign(confIns.OpenapiConfig.Ak, confIns.OpenapiConfig.Sk, 1800, method, uriPath, nil, string(data))
+	customHeaders := map[string]string{
+		AUTHORIZATION: authorization,
+	}
+	return p.request(method, url, data, customHeaders)
+}
+
+// 上报item
+func (p *mcsCollector) saasSendItemProfile(dmsg *ServerSdkEventMessage) error {
+	if dmsg.EventV3 == nil {
+		return nil
+	}
+	var err error
+	for _, eventV3 := range dmsg.EventV3 {
+		siam := CreateSaasItemAppMessage(eventV3)
+		data, err := json.Marshal(siam)
+		if err != nil {
+			fatal(err.Error())
+			return err
+		}
+		mParams := eventV3.Params
+		itemName, _ := mParams["item_name"]
+		itemId, _ := mParams["item_id"]
+		uriPath := fmt.Sprintf(PATH_ITEM_ATTR, *dmsg.AppId, itemName, itemId)
+		url := confIns.OpenapiConfig.HttpAddr + uriPath
+		method := "PUT"
+		authorization := Sign(confIns.OpenapiConfig.Ak, confIns.OpenapiConfig.Sk, 1800, method, uriPath, nil, string(data))
+		customHeaders := map[string]string{
+			AUTHORIZATION: authorization,
+		}
+		err = p.request(method, url, data, customHeaders)
+		if err != nil {
+			fatal(err.Error())
+			return err
+		}
+	}
+	return err
+}
+
+func (p *mcsCollector) request(method string, url string, data []byte, customHeaders map[string]string) error {
+	req, err := http.NewRequest(method, url, strings.NewReader(string(data)))
 	if err != nil {
 		fatal(err.Error())
 		return err
 	}
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("User-Agent", "DataRangers Golang SDK")
 	defer func() {
 		req.Body.Close()
 	}()
-	//补充 header
+	//补充 Header
 	for k, v := range headers {
 		if m, okk := v.(string); okk {
 			req.Header.Set(k, m)
@@ -70,52 +276,54 @@ func (p *mcsCollector) send(dmsg interface{}) error {
 			req.Header.Set(k, strconv.Itoa(m))
 		}
 	}
-	h, _ := json.Marshal(req.Header)
-	debug("request header : " + string(h))
-
-	tmp, _ := json.Marshal(dmsg)
-	//
-	if !confIns.EventlogConfig.EventSendEnable {
-		debug("保存成功！保存的json 为 -> : " + string(tmp))
-		logger.Println(string(data))
-		return nil
+	// 特殊的需要设置的header
+	if customHeaders != nil {
+		for k, v := range customHeaders {
+			req.Header.Set(k, v)
+		}
 	}
-	//其余的都上报。
+	h, _ := json.Marshal(req.Header)
+	debug("request Header : " + string(h))
 	var resp *http.Response
 	resp, err = p.mscHttpClient.Do(req)
 	if resp != nil && resp.Body != nil {
 		defer resp.Body.Close()
 	}
 	if err != nil {
-		warn(err.Error() + "    消息未发送成功, 重试一次")
+		warn(err.Error() + "    send error, will retry again")
 		resp, err = p.mscHttpClient.Do(req)
 		if resp != nil && resp.Body != nil {
 			defer resp.Body.Close()
 		}
 		if err != nil {
-			warn(err.Error() + "    重试时 未发送成功 ")
+			fatal(err.Error() + "    retry send error ")
 		}
 	} else {
 		if resp.StatusCode != 200 {
-			fatal("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
-			fmt.Println(resp.Body)
 			body, _ := ioutil.ReadAll(resp.Body)
-			fmt.Println(string(body))
-			return fmt.Errorf("信息发送失败，错误码为: " + strconv.Itoa(resp.StatusCode))
+			rBody := fmt.Sprintf("send error, method: %s, url: %s, status code: %d, resp: %s, req:\r\n%s",
+				method, url, resp.StatusCode, string(body), string(data))
+			fmt.Println(rBody)
+			fatal(rBody)
+			return fmt.Errorf(rBody)
 		} else {
 			if resp != nil && resp.Body != nil {
 				body, _ := ioutil.ReadAll(resp.Body)
 				responseMsg := map[string]interface{}{}
 				err2 := json.Unmarshal(body, &responseMsg)
 				if err2 != nil {
-					fatal("解析body出错, body 为 " + string(body))
-					return fmt.Errorf("解析body出错")
+					rBody := fmt.Sprintf("parse body error, method: %s, url: %s, status code: %d, resp: %s, req:\r\n%s",
+						method, url, resp.StatusCode, string(body), string(data))
+					fatal(rBody)
+					return fmt.Errorf(rBody)
 				}
 				if msg, ok := responseMsg["message"]; ok && msg == "success" {
-					debug("上报成功！上报的json 为 -> : " + string(tmp))
+					debug(fmt.Sprintf("send success！message json : %s, resp: %s", string(data), string(body)))
 				} else {
-					fatal("数据未上报到applog, 返回body为" + string(body))
-					return fmt.Errorf("数据未上报到applog")
+					rBody := fmt.Sprintf("send error, method: %s, url: %s, status code: %d, resp: %s, req:\r\n%s",
+						method, url, resp.StatusCode, string(body), string(data))
+					fatal(rBody)
+					return fmt.Errorf(rBody)
 				}
 			}
 		}
@@ -123,21 +331,10 @@ func (p *mcsCollector) send(dmsg interface{}) error {
 	return err
 }
 
-//func collectsync(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}) error {
-//	dmg := generate(appid, uuid, eventname, eventParam, custom, apptype)
-//	if err := appcollector.send(dmg); err != nil {
-//		data, a := json.Marshal(dmg)
-//		if a != nil {
-//			warn(err.Error() + "消息未发送成功")
-//			return a
-//		}
-//		errlogger.Println(string(data))
-//		return err
-//	}
-//	return nil
-//}
-
-func getServerSdkEventWithAbMessage(appid int64, uuid string, abSdkVersionList []string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, apptype1 Apptype, device_id ...int64) *ServerSdkEventMessage {
+func getServerSdkEventWithAbMessage(appid int64, uuid string, abSdkVersionList []string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, appType AppType, device_id ...int64) *ServerSdkEventMessage {
+	if !isInit {
+		panic("Sdk must be init first")
+	}
 	var webid int64
 	if len(device_id) != 0 {
 		webid = device_id[0]
@@ -145,49 +342,83 @@ func getServerSdkEventWithAbMessage(appid int64, uuid string, abSdkVersionList [
 	if custom == nil {
 		custom = map[string]interface{}{}
 	}
-	custom["__sdk_platform"] = "datarangers_server_sdk_go_v1.0.5"
+	custom["__sdk_platform"] = SDK_VERSION
 	hd := &Header{
-		Aid:            proto.Int64(appid),
-		Custom:         custom,
-		Device_id:      proto.Int64(webid),
-		User_unique_id: proto.String(uuid),
-		Timezone:       proto.Int32(int32(timezone)),
+		Aid:          &appid,
+		Custom:       custom,
+		DeviceId:     &webid,
+		UserUniqueId: &uuid,
+		Timezone:     &timezone,
 	}
+	appTypeStr := string(appType)
 	dmg := &ServerSdkEventMessage{
-		App_id:         proto.Int64(appid),
-		User_unique_id: proto.String(uuid),
-		App_type:       proto.String(string(apptype1)),
-		Device_id:      proto.Int64(webid),
+		AppId:        &appid,
+		UserUniqueId: &uuid,
+		AppType:      &appTypeStr,
+		DeviceId:     &webid,
 	}
 	timeObj := time.Unix(time.Now().Unix(), 0)
-	var sendEventV3 []*Event_v3
+	var sendEventV3 []*EventV3
 	for i, eventname := range eventnameList {
-		itm := &Event_v3{
-			Datetime:    proto.String(timeObj.Format("2006-01-02 15:04:05")),
-			Event:       proto.String(eventname),
-			LocalTimeMs: proto.Int64(time.Now().UnixNano() / 1e6),
+		itm := &EventV3{
+			Datetime:    PtrString(timeObj.Format(DATE_TIME_LAYOUT)),
+			Event:       eventname,
+			LocalTimeMs: PtrInt64(time.Now().UnixMicro()),
 			Params:      eventParam[i],
 		}
 		if abSdkVersionList != nil {
-			itm.AbSdkVersion = proto.String(abSdkVersionList[i])
+			itm.AbSdkVersion = PtrString(abSdkVersionList[i])
 		}
 		sendEventV3 = append(sendEventV3, itm)
 	}
-	dmg.Event_v3 = sendEventV3
+	dmg.EventV3 = sendEventV3
 	dmg.Header = hd
 	return dmg
 }
 
-func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, apptype1 Apptype, device_id ...int64) *ServerSdkEventMessage {
+func getEventsWithHeader(appId int64, appType AppType, hd *Header, events []*EventV3) *ServerSdkEventMessage {
+	if !isInit {
+		panic("Sdk must be init first")
+	}
+	var custom = hd.Custom
+	if custom == nil {
+		custom = map[string]interface{}{}
+	}
+	if hd.Timezone == nil {
+		hd.Timezone = &timezone
+	}
+	for _, eventV3 := range events {
+		if eventV3.LocalTimeMs == nil {
+			eventV3.LocalTimeMs = PtrInt64(time.Now().UnixMilli())
+			eventV3.Datetime = PtrString(time.UnixMilli(*eventV3.LocalTimeMs).Format(DATE_TIME_LAYOUT))
+		}
+		if eventV3.Datetime == nil {
+			eventV3.Datetime = PtrString(time.UnixMilli(*eventV3.LocalTimeMs).Format(DATE_TIME_LAYOUT))
+		}
+	}
+	appTypeStr := string(appType)
+	custom["__sdk_platform"] = SDK_VERSION
+	dmg := &ServerSdkEventMessage{
+		AppId:        &appId,
+		UserUniqueId: hd.UserUniqueId,
+		AppType:      &appTypeStr,
+		DeviceId:     hd.DeviceId,
+		EventV3:      events,
+		Header:       hd,
+	}
+	return dmg
+}
+
+func getServerSdkEventMessage(appid int64, uuid string, eventnameList []string, eventParam []map[string]interface{}, custom map[string]interface{}, apptype1 AppType, device_id ...int64) *ServerSdkEventMessage {
 	return getServerSdkEventWithAbMessage(appid, uuid, nil, eventnameList, eventParam, custom, apptype1, device_id...)
 }
 
-func getTimezone() int {
-	utc, _ := strconv.Atoi(time.Now().UTC().Format("2006-01-02 15:04:05")[11:13])
-	cur, _ := strconv.Atoi(time.Now().Format("2006-01-02 15:04:05")[11:13])
+func getTimezone() int32 {
+	utc, _ := strconv.Atoi(time.Now().UTC().Format(DATE_TIME_LAYOUT)[11:13])
+	cur, _ := strconv.Atoi(time.Now().Format(DATE_TIME_LAYOUT)[11:13])
 	ans := cur - utc
 	if ans <= -12 {
 		ans = ans + 24
 	}
-	return ans
+	return int32(ans)
 }

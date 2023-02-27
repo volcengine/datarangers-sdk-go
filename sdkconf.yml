@@ -1,16 +1,25 @@
-Log:
-  eventsendenable: false
-  path: log/sensors.log
-  errlogpath: log/id.log
-  maxsize: 100     #Mb
-  maxsbackup: 10 #日志最多保存数目
-  maxage: 60  #days
-  loglevel: debug
-Http:
-  addr: http://doman  #上报的IP 或 域名
+sdk:
+  mode: http
+  env: pri
+log:
+  eventSendEnable: false
+  path: log/rangers.log
+  errLogPath: log/id.log
+  maxSize: 100     #Mb
+  maxBackups: 10 #日志最多保存数目
+  maxAge: 60  #days
+  logLevel: debug
+http:
+  addr: https://domain  #上报的IP 或 域名
   timeout: 30 # secenods
-Headers:       #发送的header头,用户自己定义
-  host: snssdk.vpc.com
-Asyn:
+  Headers:       #发送的header头,用户自己定义
+    host: snssdk.vpc.com
+asyn:
   routine: 1024   #建议小于1024，并发数目
-  mqlen: 200000
+  queueSize: 200000
+openapi:
+  addr: https://domain #openapi的ip或者域名
+  ak: xxx
+  sk: xxx
+verify:
+  url: xxx # 实时埋点检测的地址
