@@ -1,6 +1,5 @@
 package datarangers_sdk
 
-
 /**
  *	Copyright 2020 Beijing Volcano Engine Technology Co., Ltd.
  *	Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -11,106 +10,101 @@ package datarangers_sdk
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"strconv"
+	"time"
 )
 
-/**
-eventParam : 事件属性
-custom     : 用户自定义事件公共属性
-*/
-func SendEvent(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, did ...int64) error {
-	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
+// SendEventAb
+// eventParam : 事件属性
+// custom     : 用户自定义事件公共属性
+// Deprecated instead of SendEventInfo
+func SendEventAb(apptype AppType, appid int64, uuid string, abSdkVersion string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, did ...int64) error {
+	var abSdkVersionList []string
+	if abSdkVersion != "" {
+		abSdkVersionList = []string{abSdkVersion}
 	}
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
-	dmg := getServerSdkEventMessage(appid, uuid, []string{eventname}, []map[string]interface{}{eventParam}, custom, apptype, did ...)
-	mqlxy.push(dmg)
+	dmg := getServerSdkEventWithAbMessage(appid, uuid, abSdkVersionList, []string{eventname}, []map[string]interface{}{eventParam}, custom, apptype, did...)
+	mq.push(dmg)
 	return nil
 }
 
+// SendEvent
+// eventParam : 事件属性
+// custom     : 用户自定义事件公共属性
+// Deprecated: instead of SendEventInfo
+func SendEvent(appType AppType, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, did ...int64) error {
+	return SendEventAb(appType, appid, uuid, "", eventname, eventParam, custom, did...)
+}
 
-/**
-eventParam : 事件属性
-custom     : 用户自定义事件公共属性
-*/
-func SendEvents(apptype Apptype, appid int64, uuid string, eventnameList []string, eventParamList []map[string]interface{}, custom map[string]interface{},  did ...int64) error {
-	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
-	}
+// SendEvents
+// eventParam : 事件属性
+// custom     : 用户自定义事件公共属性
+// Deprecated: instead of SendEventInfos
+func SendEvents(appType AppType, appid int64, uuid string, eventnameList []string, eventParamList []map[string]interface{}, custom map[string]interface{}, did ...int64) error {
 	if len(eventnameList) != len(eventParamList) {
 		return fmt.Errorf("事件数目与 属性数目对不上")
 	}
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
-	dmg := getServerSdkEventMessage(appid, uuid, eventnameList, eventParamList, custom, apptype, did ...)
-	mqlxy.push(dmg)
+	dmg := getServerSdkEventMessage(appid, uuid, eventnameList, eventParamList, custom, appType, did...)
+	mq.push(dmg)
 	return nil
 }
 
+// SendEventInfo 上报事件信息
+// event: 事件信息
+// custom: 事件公共属性
+func SendEventInfo(appType AppType, appId int64, uuid string, event *EventV3, custom map[string]interface{}) error {
+	return SendEventInfos(appType, appId, uuid, []*EventV3{event}, custom)
+}
 
-/**
-profileAction ：用户公共属性操作类型
-profileParam :  用户公共属性
-*/
-func SendProfile(apptype Apptype, appid int64, uuid string, profileAction ProfileActionType, profileParam map[string]interface{}, did ...int64) error {
-	//DCL,初始化MQ,执行池子.
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
+// SendEventInfoWithItem 上报携带item的事件
+// event: 事件信息
+// custom: 事件公共属性
+// itemList: item 信息
+func SendEventInfoWithItem(appType AppType, appId int64, uuid string, event *EventV3, custom map[string]interface{}, itemList []*Item) error {
+	generateItem(event.Params, itemList)
+	return SendEventInfos(appType, appId, uuid, []*EventV3{event}, custom)
+}
+
+// SendEventInfos 上报多个事件
+// events: 事件信息
+// custom: 事件公共属性
+func SendEventInfos(appType AppType, appId int64, uuid string, events []*EventV3, custom map[string]interface{}) error {
+	hd := &Header{
+		Aid:          &appId,
+		Custom:       custom,
+		UserUniqueId: &uuid,
 	}
-	if profileAction != SET && profileAction != SET_ONCE && profileAction != APPEND && profileAction != INCREAMENT && profileAction !=UNSET{
-		fatal("请使用正确的profile操作类型")
-		return nil
-	}
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
-	dmg := getServerSdkEventMessage(appid, uuid, []string{string(profileAction)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did ...)
-	mqlxy.push(dmg)
+	return SendEventsWithHeader(appType, appId, hd, events)
+}
+
+// SendEventWithHeader 使用header上报事件
+// header: 事件的header
+// event: 事件信息
+func SendEventWithHeader(appType AppType, appId int64, hd *Header, event *EventV3) error {
+	return SendEventsWithHeader(appType, appId, hd, []*EventV3{event})
+}
+
+func SendEventsWithHeader(appType AppType, appId int64, hd *Header, events []*EventV3) error {
+	dmg := getEventsWithHeader(appId, appType, hd, events)
+	mq.push(dmg)
 	return nil
 }
 
-//
+// SendProfile
+// profileAction ：用户公共属性操作类型
+// profileParam :  用户公共属性
+func SendProfile(apptype AppType, appid int64, uuid string, profileAction ProfileActionType, profileParam map[string]interface{}, did ...int64) error {
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(profileAction)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did...)
+	mq.push(dmg)
+	return nil
+}
+
+// SendItem
+// Deprecated: instead of SendEventInfoWithItem
 func SendItem(appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, itemList []*Item) error {
-
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
 	generateItem(eventParam, itemList)
 	dmg := getServerSdkEventMessage(appid, uuid, []string{eventname}, []map[string]interface{}{eventParam}, custom, APP)
-	mqlxy.push(dmg)
+	mq.push(dmg)
 	return nil
 }
 
@@ -126,45 +120,37 @@ func generateItem(eventParam map[string]interface{}, itemList []*Item) {
 	eventParam["__items"] = __items
 }
 
-
+// ItemSet 设置item 属性
+// itemName: item 名称
+// itemParamList: item 属性信息
 func ItemSet(appid int64, itemName string, itemParamList []map[string]interface{}) error {
-	//DCL,初始化MQ,执行池子.
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
-	if ok := checkItemParamList(itemName, itemParamList); !ok{
+	if ok := checkItemParamList(itemName, itemParamList); !ok {
 		return fmt.Errorf("itemParam Must contains Id &&& id must be string")
 	}
 	//TODO 批量set 失效。
 	batch := []string{}
-	for i:=0; i< len(itemParamList); i++{
-		batch =append(batch, "__item_set")
+	for i := 0; i < len(itemParamList); i++ {
+		batch = append(batch, string(ITEM_SET))
 	}
 	dmg := getServerSdkEventMessage(appid, "__rangers", batch, itemParamList, map[string]interface{}{}, APP)
-	mqlxy.push(dmg)
+	dmg.MessageType = MESSAGE_ITEM
+	mq.push(dmg)
 	return nil
 }
 
-
 func checkItemParamList(itemName string, itemParamList []map[string]interface{}) bool {
-	for _, itemMap := range itemParamList{
-		if id, ok := itemMap["id"]; ok{
-			if intId, ok:= id.(int); ok {
+	for _, itemMap := range itemParamList {
+		if id, ok := itemMap["id"]; ok {
+			if intId, ok := id.(int); ok {
 				id = strconv.Itoa(intId)
 			}
-			if _, ok:= id.(string); !ok {
+			if _, ok := id.(string); !ok {
 				return false
 			}
 			itemMap["item_id"] = id
 			itemMap["item_name"] = itemName
 			delete(itemMap, "id")
-		}else{
+		} else {
 			return false
 		}
 	}
@@ -172,149 +158,69 @@ func checkItemParamList(itemName string, itemParamList []map[string]interface{})
 }
 
 func ItemUnset(appid int64, itemName string, id string, removeKeyList []string) error {
-	//DCL,初始化MQ,执行池子.
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
 	itemParam := map[string]interface{}{}
 	itemParam["item_name"] = itemName
 	itemParam["item_id"] = id
-	for _, key := range removeKeyList{
+	for _, key := range removeKeyList {
 		itemParam[key] = 1
 	}
-	dmg := getServerSdkEventMessage(appid, "__rangers", []string{"__item_unset"}, []map[string]interface{}{itemParam}, map[string]interface{}{}, APP)
-	mqlxy.push(dmg)
+	dmg := getServerSdkEventMessage(appid, "__rangers", []string{string(ITEM_UNSET)}, []map[string]interface{}{itemParam}, map[string]interface{}{}, APP)
+	dmg.MessageType = MESSAGE_ITEM
+	mq.push(dmg)
 	return nil
 }
 
-
-func ProfileSet( apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}, did ...int64) error {
-	//DCL,初始化MQ,执行池子.
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
-	dmg := getServerSdkEventMessage(appid, uuid, []string{string(SET)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did ...)
-	mqlxy.push(dmg)
+func ProfileSet(apptype AppType, appid int64, uuid string, profileParam map[string]interface{}, did ...int64) error {
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(SET)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did...)
+	dmg.MessageType = MESSAGE_USER
+	mq.push(dmg)
 	return nil
 }
 
-
-func ProfileSetOnce( apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}, did ...int64) error {
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
-	dmg := getServerSdkEventMessage(appid, uuid, []string{string(SET_ONCE)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did ...)
-	mqlxy.push(dmg)
+func ProfileSetOnce(apptype AppType, appid int64, uuid string, profileParam map[string]interface{}, did ...int64) error {
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(SET_ONCE)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did...)
+	dmg.MessageType = MESSAGE_USER
+	mq.push(dmg)
 	return nil
 }
 
-
-func ProfileIncrement( apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}, did ...int64) error {
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
-	dmg := getServerSdkEventMessage(appid, uuid, []string{string(INCREAMENT)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did ...)
-	mqlxy.push(dmg)
+func ProfileIncrement(apptype AppType, appid int64, uuid string, profileParam map[string]interface{}, did ...int64) error {
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(INCREAMENT)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did...)
+	dmg.MessageType = MESSAGE_USER
+	mq.push(dmg)
 	return nil
 }
 
-
-func ProfileUnset(apptype Apptype, appid int64, uuid string, profileNameList []string, did ...int64) error {
-	//DCL,初始化MQ,执行池子.
-
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
+func ProfileUnset(apptype AppType, appid int64, uuid string, profileNameList []string, did ...int64) error {
 	profileParam := map[string]interface{}{}
-	for _, name := range profileNameList{
+	for _, name := range profileNameList {
 		profileParam[name] = 1
 	}
-	dmg := getServerSdkEventMessage(appid, uuid, []string{string(UNSET)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did ...)
-	mqlxy.push(dmg)
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(UNSET)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did...)
+	dmg.MessageType = MESSAGE_USER
+	mq.push(dmg)
 	return nil
 }
 
-
-func ProfileAppend(apptype Apptype, appid int64, uuid string, profileParam map[string]interface{}, did ...int64) error {
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("init goroutine pool success")
-			firstLock.Unlock()
-		}
-	}
-	dmg := getServerSdkEventMessage(appid, uuid, []string{string(APPEND)},  []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did ...)
-	mqlxy.push(dmg)
+func ProfileAppend(apptype AppType, appid int64, uuid string, profileParam map[string]interface{}, did ...int64) error {
+	dmg := getServerSdkEventMessage(appid, uuid, []string{string(APPEND)}, []map[string]interface{}{profileParam}, map[string]interface{}{}, apptype, did...)
+	dmg.MessageType = MESSAGE_USER
+	mq.push(dmg)
 	return nil
 }
 
-
-
-func SendEventWithDevice(apptype Apptype, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, device devicetype, deviceKey string) error {
-
-	if apptype != MP && apptype != WEB && apptype != APP {
-		fatal("apptype 只能为 MP WEB APP")
-		return nil
-	}
-	if device != ANDROID && device != IOS {
-		fatal("deviceType 只能为 ANDROID IOS")
-		return nil
-	}
-	//DCL,初始化MQ,执行池子.
-	if isFirst {
-		firstLock.Lock()
-		if isFirst {
-			initAsyn()
-			isFirst = false
-			debug("初始化携程池完成")
-			firstLock.Unlock()
-		}
-	}
+func SendEventWithDevice(apptype AppType, appid int64, uuid string, eventname string, eventParam map[string]interface{}, custom map[string]interface{}, device deviceType, deviceKey string) error {
 	dmg := getServerSdkEventMessage(appid, uuid, []string{eventname}, []map[string]interface{}{eventParam}, custom, apptype)
-	//tmp, _ := json.Marshal(dmg)
-	//debug("上报的 json 为 -> : " + string(tmp))
 	if device == "ANDROID" {
-		dmg.Header.Openudid = proto.String(deviceKey)
+		dmg.Header.Openudid = &deviceKey
 	} else {
-		dmg.Header.Vendor_id = proto.String(deviceKey)
+		dmg.Header.VendorId = &deviceKey
 	}
-	mqlxy.push(dmg)
+	mq.push(dmg)
 	return nil
 }
 
-type execpool struct {
+type execPool struct {
 	max     int
 	tickets chan *ticket
 }
@@ -324,8 +230,8 @@ type ticket struct {
 }
 
 //单例模式
-func newExecpool(x int) *execpool {
-	instance = &execpool{}
+func newExecpool(x int) *execPool {
+	instance = &execPool{}
 	instance.max = x
 	instance.tickets = make(chan *ticket, instance.max)
 	for i := 0; i < instance.max; i++ {
@@ -334,18 +240,51 @@ func newExecpool(x int) *execpool {
 	return instance
 }
 
-func (p *execpool) exec() {
+func (p *execPool) exec() {
 	for {
 		t := <-p.tickets
 		go func() {
-			dmg := mqlxy.pop()
-			var err error
-			err = appcollector.send(dmg)
-			if err != nil {
-				ans, _ := json.Marshal(dmg)
-				errlogger.Println(string(ans))
-			}
+			p.Send()
 			p.tickets <- t
 		}()
 	}
+}
+
+func (p *execPool) Send() {
+	if confIns.BatchConfig.Enable {
+		dmgs, err := p.doSendBatch()
+		if err != nil {
+			for _, dmg := range dmgs {
+				ans, _ := json.Marshal(dmg)
+				errFileWriter.Println(string(ans))
+			}
+		}
+	}
+	dmg := mq.pop()
+	err := appCollector.send(dmg)
+	if err != nil {
+		ans, _ := json.Marshal(dmg)
+		errFileWriter.Println(string(ans))
+	}
+}
+
+func (p *execPool) doSend() (interface{}, error) {
+	if confIns.BatchConfig.Enable {
+		return p.doSendBatch()
+	}
+	dmg := mq.pop()
+	var err error
+	err = appCollector.send(dmg)
+	return dmg, err
+}
+
+func (p *execPool) doSendBatch() ([]interface{}, error) {
+	waitTimeMs := time.Duration(confIns.BatchConfig.WaitTimeMs) * time.Millisecond
+	dmgs := mq.popBatch(confIns.BatchConfig.Size, waitTimeMs)
+	if len(dmgs) < 1 {
+		return dmgs, nil
+	}
+	debug(fmt.Sprintf("dmgs size: %d", len(dmgs)))
+	err := appCollector.sendBatch(dmgs)
+	return dmgs, err
 }

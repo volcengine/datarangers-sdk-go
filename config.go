@@ -1,4 +1,5 @@
 package datarangers_sdk
+
 /**
  *	Copyright 2020 Beijing Volcano Engine Technology Co., Ltd.
  *	Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
@@ -7,20 +8,23 @@ package datarangers_sdk
  */
 import (
 	"encoding/json"
+	"fmt"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 )
 
-type Apptype string
-type devicetype string
+type AppType string
+type deviceType string
 type ProfileActionType string
+type ItemActionType string
 
 const (
 	LevelTrace = iota
@@ -31,263 +35,406 @@ const (
 	LevelError
 	LevelFatal
 
-	MP  Apptype = "mp"
-	APP Apptype = "app"
-	WEB Apptype = "web"
+	MP  AppType = "mp"
+	APP AppType = "app"
+	WEB AppType = "web"
+	ALL AppType = "*"
 
-	IOS     devicetype = "IOS"
-	ANDROID devicetype = "ANDROID"
+	IOS     deviceType = "IOS"
+	ANDROID deviceType = "ANDROID"
 
-	SET ProfileActionType = "__profile_set"
-	UNSET ProfileActionType = "__profile_unset"
-	APPEND ProfileActionType = "__profile_append"
-	SET_ONCE ProfileActionType = "__profile_set_once"
+	APP_KEY       string = "X-MCS-AppKey"
+	AUTHORIZATION string = "Authorization"
+
+	SET        ProfileActionType = "__profile_set"
+	UNSET      ProfileActionType = "__profile_unset"
+	APPEND     ProfileActionType = "__profile_append"
+	SET_ONCE   ProfileActionType = "__profile_set_once"
 	INCREAMENT ProfileActionType = "__profile_increment"
+
+	ITEM_SET    ItemActionType = "__item_set"
+	ITEM_UNSET  ItemActionType = "__item_unset"
+	ITEM_DELETE ItemActionType = "__item_delete"
+
+	EVENT_MESSAGE string = "EVENT"
+	USER_MESSAGE  string = "USER"
+	ITEM_MESSAGE  string = "ITEM"
+
+	DATE_TIME_LAYOUT string = "2006-01-02 15:04:05"
+	SDK_VERSION      string = "datarangers_sdk_go_v2.0.1"
+
+	ENV_PRI         string = "pri"
+	ENV_SAAS        string = "saas"
+	ENV_SAAS_NATIVE string = "saas_native"
+
+	MODE_HTTP string = "http"
+	MODE_FILE string = "file"
+
+	MESSAGE_EVENT string = "event"
+	MESSAGE_USER  string = "user"
+	MESSAGE_ITEM  string = "item"
+)
+
+const (
+	DEFAULT_ROUTINE    int = 20
+	DEFAULT_QUEUE_SIZE int = 10240
+
+	DEFAULT_FILE_MAX_SIZE   int = 100
+	DEFAULT_FILE_MAX_BACKUP int = 0
+	DEFAULT_FILE_MAX_AGE    int = 0
+
+	DEFAULT_BATCH_SIZE         int   = 20
+	DEFAULT_BATCH_WAIT_TIME_MS int64 = 100
+
+	DEFAULT_SOCKET_TIME_OUT int = 30
 )
 
 var (
-	defaultconf *Property
-	confIns     = &syncConf{}
+	//Deprecated:
+	defaultConf *Property
+	confIns     = &SysConf{}
 	headers     map[string]interface{}
 
-	logger    *log.Logger
-	errlogger *log.Logger
+	fileWriter    *log.Logger
+	errFileWriter *log.Logger
 
-	debuglog  = log.New(os.Stdout, "[DEBUG:]", log.Ldate|log.Ltime)
-	warnlog   = log.New(os.Stdout, "[WARN:]", log.Ldate|log.Ltime)
-	errstdlog = log.New(os.Stdout, "[ERROR:]", log.Ldate|log.Ltime)
-	loglevel  int
+	debugLog    = log.New(os.Stdout, "[DEBUG:]", log.Ldate|log.Ltime)
+	infoLog     = log.New(os.Stdout, "[INFO:]", log.Ldate|log.Ltime)
+	warnLog     = log.New(os.Stdout, "[WARN:]", log.Ldate|log.Ltime)
+	errorLog    = log.New(os.Stdout, "[ERROR:]", log.Ldate|log.Ltime)
+	logLevel    int
+	logLevelMap = map[string]int{
+		"TRACE": 0,
+		"DEBUG": 1,
+		"INFO":  2,
+		"WARN":  3,
+		"ERROR": 5,
+		"FATAL": 6,
+	}
 
 	maxIdleConnsPerHost = 1024
 
-	isFirst               = true
-	isFirstConfByProperty = true
-	isFirstConfByFile     = true
-	isInit                = true
+	isInit   = false
+	initLock = sync.Mutex{}
 
-	appcollector *mcsCollector
-	timezone     int
+	appCollector *mcsCollector
+	timezone     int32
 
-	firstLock = sync.Mutex{}
-	mqlxy     *mq
-	instance  *execpool
+	mq       *messageQueue
+	instance *execPool
+
+	profileOperationMap = map[string]string{
+		string(SET):        "SET",
+		string(SET_ONCE):   "SET_ONE",
+		string(APPEND):     "APPEND",
+		string(INCREAMENT): "INCREASE",
+		string(UNSET):      "UNSET",
+	}
+	itemOperationMap = map[string]string{
+		string(ITEM_SET):    "SET",
+		string(ITEM_DELETE): "DELETE",
+		string(ITEM_UNSET):  "UNSET",
+	}
+
+	sasSDomainUrls = map[string]bool{
+		"https://mcs.ctobsnssdk.com": true,
+		"https://mcs.tobsnssdk.com":  true,
+	}
+
+	sasSNativeDomainUrls = map[string]bool{
+		"https://gator.volces.com": true,
+	}
 )
 
-type syncConf struct {
-	EventlogConfig eventlogConfig `yaml:"Log"`
-	HttpConfig     httpConfig     `yaml:"Http"`
-	Asynconf       asynconf       `yaml:"Asyn"`
+type SysConf struct {
+	SdkConfig     SdkConfig        `yaml:"sdk"`
+	BatchConfig   BatchConfig      `yaml:"batch"`
+	FileConfig    FileConfig       `yaml:"file"`
+	HttpConfig    HttpConfig       `yaml:"http"`
+	AsynConfig    AsynConfig       `yaml:"asyn"`
+	OpenapiConfig OpenapiConfig    `yaml:"openapi"`
+	VerifyConfig  VerifyConfig     `yaml:"verify"`
+	AppKeys       map[int64]string `yaml:"appKeys"`
 }
 
-type eventlogConfig struct {
-	EventSendEnable      bool   `yaml:"eventsendenable"` //yaml：yaml格式 enabled：属性的为enabled
-	//Islog      bool   `yaml:"islog"` //yaml：yaml格式 enabled：属性的为enabled
-	//Iscollect  bool   `yaml:"iscollect"`
-	Path       string `yaml:"path"`
-	MaxSize    int    `yaml:"maxsize"` // megabytes
-	MaxBackups int    `yaml:"maxsbackup"`
-	MaxAge     int    `yaml:"maxage"` // days
-	ErrPath    string `yaml:"errlogpath"`
-	LogLevel   string `yaml:"loglevel"`
+type BatchConfig struct {
+	Enable     bool  `yaml:"enable"`
+	Size       int   `yaml:"size"`
+	WaitTimeMs int64 `yaml:"waitTimeMs"`
 }
 
-type httpConfig struct {
-	HttpAddr      string `yaml:"addr"`
-	SocketTimeOut int    `yaml:"timeout"`
+type SdkConfig struct {
+	Mode     string `yaml:"mode"`
+	Env      string `yaml:"env"`
+	LogLevel string `yaml:"logLevel"`
 }
 
-type asynconf struct {
-	Routine    int    `yaml:"routine"`
-	Errlogpath string `yaml:"errlogpath"`
-	Mqlen      int    `yaml:"mqlen"`
-	Mqwait     int    `yaml:"mqwait"`
+type FileConfig struct {
+	EventSendEnable bool   `yaml:"eventSendEnable"` //yaml：yaml格式 enabled：属性的为enabled，已经过期废弃，不建议使用
+	Path            string `yaml:"path"`
+	MaxSize         int    `yaml:"maxSize"` // megabytes
+	MaxBackup       int    `yaml:"maxBackup"`
+	MaxAge          int    `yaml:"maxAge"` // days
+	ErrPath         string `yaml:"errPath"`
 }
 
-func newLog() {
-	logger = &log.Logger{}
+type HttpConfig struct {
+	HttpAddr      string                 `yaml:"addr"`
+	SocketTimeOut int                    `yaml:"timeout"`
+	Headers       map[string]interface{} `yaml:"headers"`
+}
+
+type AsynConfig struct {
+	Routine   int `yaml:"routine"`
+	QueueSize int `yaml:"queueSize"`
+}
+
+type OpenapiConfig struct {
+	HttpAddr string `yaml:"addr"`
+	Ak       string `yaml:"ak"`
+	Sk       string `yaml:"sk"`
+}
+
+type VerifyConfig struct {
+	Url string `yaml:"url"`
+}
+
+func initFile() {
+	fileWriter = &log.Logger{}
+	if confIns.FileConfig.Path == "" {
+		confIns.FileConfig.Path = "logs/datarangers.log"
+	}
+	if confIns.FileConfig.MaxSize < 1 {
+		confIns.FileConfig.MaxSize = DEFAULT_FILE_MAX_SIZE
+	}
+	if confIns.FileConfig.MaxBackup < 0 {
+		confIns.FileConfig.MaxBackup = DEFAULT_FILE_MAX_BACKUP
+	}
+	if confIns.FileConfig.MaxAge < 0 {
+		confIns.FileConfig.MaxAge = DEFAULT_FILE_MAX_AGE
+	}
+	if confIns.FileConfig.ErrPath == "" {
+		confIns.FileConfig.ErrPath = "logs/error-datarangers.log"
+	}
 	w := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   confIns.EventlogConfig.Path,
-		MaxSize:    confIns.EventlogConfig.MaxSize, // megabytes
-		MaxBackups: confIns.EventlogConfig.MaxBackups,
-		MaxAge:     confIns.EventlogConfig.MaxAge, // days
+		Filename:   confIns.FileConfig.Path,
+		MaxSize:    confIns.FileConfig.MaxSize, // megabytes
+		MaxBackups: confIns.FileConfig.MaxBackup,
+		MaxAge:     confIns.FileConfig.MaxAge, // days
 		LocalTime:  true,
 	})
-	logger.SetOutput(w)
+	fileWriter.SetOutput(w)
 
-	errlogger = &log.Logger{}
+	errFileWriter = &log.Logger{}
 	q := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   confIns.EventlogConfig.ErrPath,
-		MaxSize:    confIns.EventlogConfig.MaxSize, // megabytes
-		MaxBackups: confIns.EventlogConfig.MaxBackups,
-		MaxAge:     confIns.EventlogConfig.MaxAge, // days
+		Filename:   confIns.FileConfig.ErrPath,
+		MaxSize:    confIns.FileConfig.MaxSize, // megabytes
+		MaxBackups: confIns.FileConfig.MaxBackup,
+		MaxAge:     confIns.FileConfig.MaxAge, // days
 		LocalTime:  true,
 	})
-	errlogger.SetOutput(q)
+	errFileWriter.SetOutput(q)
 
 }
 
 func debug(s interface{}) {
-	if loglevel > LevelDebug {
+	if logLevel > LevelDebug {
 		return
 	}
-	debuglog.Println(s)
+	debugLog.Println(s)
+}
+
+func info(s interface{}) {
+	if logLevel > LevelInfo {
+		return
+	}
+	infoLog.Println(s)
 }
 
 func warn(s interface{}) {
-	if loglevel > LevelWarn {
+	if logLevel > LevelWarn {
 		return
 	}
-	warnlog.Println(s)
+	warnLog.Println(s)
 }
 
 func fatal(s interface{}) {
-	if loglevel > LevelError {
+	if logLevel > LevelError {
 		return
 	}
-	errstdlog.Println(s)
+	errorLog.Println(s)
 }
 
 func initAsyn() {
-	mqlxy = newMq()
-	instance = newExecpool(confIns.Asynconf.Routine)
+	if confIns.AsynConfig.Routine < 1 {
+		confIns.AsynConfig.Routine = DEFAULT_ROUTINE
+	}
+	if confIns.AsynConfig.QueueSize < 1 {
+		confIns.AsynConfig.QueueSize = DEFAULT_QUEUE_SIZE
+	}
+	mq = newMq()
+	instance = newExecpool(confIns.AsynConfig.Routine)
 	go instance.exec()
+	debug("init goroutine pool success")
+}
+
+func InitBySysConf(conf *SysConf) error {
+	if !isInit {
+		initLock.Lock()
+		defer initLock.Unlock()
+		confIns = conf
+		maps := confIns.HttpConfig.Headers
+		if maps != nil {
+			//覆盖参数，而不是替换。
+			if headers == nil {
+				headers = map[string]interface{}{}
+			}
+			for k, v := range maps {
+				headers[k] = v
+			}
+		}
+		initEnvMode()
+		initFile()
+		initLogLevel()
+		appCollector = newMcsCollector()
+		timezone = getTimezone()
+		initAsyn()
+		initBatch()
+		initHook()
+
+		if a, err := json.Marshal(confIns); a != nil {
+			debug("user config :" + string(a))
+			println("user config :" + string(a))
+		} else {
+			panic("user config error : " + err.Error())
+			return err
+		}
+		isInit = true
+	}
+	return nil
 }
 
 func InitByFile(path string) error {
-	if isFirstConfByFile {
-		firstLock.Lock()
-		defer firstLock.Unlock()
-		if isFirstConfByFile {
+	if !isInit {
+		initLock.Lock()
+		defer initLock.Unlock()
+		if !isInit {
 			yamlFile, err := ioutil.ReadFile(path)
 			if err != nil {
-				fatal("初始化文件配置fail->  : " + err.Error() + ", 将使用默认配置")
+				panic("init config fail->  : " + err.Error())
 				return err
 			}
 			if err = yaml.Unmarshal(yamlFile, confIns); err != nil {
-				fatal("初始化文件配置fail->  : " + err.Error() + ", 将使用默认配置")
+				panic("init config fail->  : " + err.Error())
 				return err
 			}
-			maps := map[string]map[string]interface{}{}
-			if err = yaml.Unmarshal(yamlFile, &maps); err != nil {
-				fatal("headers配置错误： " + err.Error() + ", 将使用默认headers")
-				return err
-			}
-
-			if maps["Headers"]!= nil {
+			maps := confIns.HttpConfig.Headers
+			if maps != nil {
 				//覆盖参数，而不是替换。
 				if headers == nil {
 					headers = map[string]interface{}{}
 				}
-				for k,v:= range maps["Headers"]{
-					headers[k] = v;
+				for k, v := range maps {
+					headers[k] = v
 				}
 			}
-			newLog()
-			appcollector = newMcsCollector(confIns.HttpConfig.HttpAddr + "/sdk/log")
+			initEnvMode()
+			initFile()
+			initLogLevel()
+			appCollector = newMcsCollector()
 			timezone = getTimezone()
-			loglevel, _ = strconv.Atoi(strings.ToUpper(confIns.EventlogConfig.LogLevel))
-			switch strings.ToUpper(confIns.EventlogConfig.LogLevel) {
-			case "TRACE":
-				loglevel = 0
-				break
-			case "DEBUG":
-				loglevel = 1
-				break
-			case "INFO":
-				loglevel = 2
-				break
-			case "WARN":
-				loglevel = 3
-				break
-			case "ERROR":
-				loglevel = 5
-				break
-			case "FATAL":
-				loglevel = 6
-				break
-			default:
-				warn("loglevel 没有设置，默认为 0")
-			}
-			isFirstConfByFile = false
+			initAsyn()
+			initBatch()
+			initHook()
+
 			if a, err := json.Marshal(confIns); a != nil {
-				debug("自定义 File 配置 ：" + string(a))
+				debug("user config :" + string(a))
+				println("user config :" + string(a))
 			} else {
-				fatal("自定义 File 配置 error : " + err.Error())
+				panic("user config error : " + err.Error())
 				return err
 			}
+			isInit = true
 		}
 	}
 
 	return nil
 }
 
-func InitByProperty(p *Property) error {
+func initLogLevel() {
+	ll, ok := logLevelMap[strings.ToUpper(confIns.SdkConfig.LogLevel)]
+	if !ok {
+		logLevel = 0
+		warn("logLevel not set, use default 0: trace")
+	} else {
+		logLevel = ll
+	}
+}
 
-	if isInit || isFirstConfByProperty {
-		firstLock.Lock()
-		defer firstLock.Unlock()
-		if isInit || isFirstConfByProperty {
-			defaultconf.EventSendEnable = p.EventSendEnable
+//InitByProperty
+//Deprecated: instead of InitByFile, or InitByConf
+func InitByProperty(p *Property) error {
+	if !isInit {
+		initLock.Lock()
+		defer initLock.Unlock()
+		if !isInit {
+			defaultConf = &Property{
+				EventSendEnable:    true,
+				Log_path:           "logs/datarangers.log",
+				Log_errlogpath:     "logs/error-datarangers.log",
+				Log_loglevel:       "trace",
+				Log_maxage:         uint32(DEFAULT_FILE_MAX_AGE),
+				Log_maxsize:        uint32(DEFAULT_FILE_MAX_SIZE),
+				Log_maxsbackup:     uint32(DEFAULT_FILE_MAX_BACKUP),
+				Http_addr:          "http://default_http_addr",
+				Http_socketTimeOut: DEFAULT_SOCKET_TIME_OUT,
+				Asyn_mqlen:         uint32(DEFAULT_QUEUE_SIZE),
+				Asyn_routine:       uint32(DEFAULT_ROUTINE),
+			}
+			defaultConf.EventSendEnable = p.EventSendEnable
 			if !p.EventSendEnable && p.Log_path != "" {
-				defaultconf.Log_path = p.Log_path
+				defaultConf.Log_path = p.Log_path
 			}
 			if p.EventSendEnable && p.Http_addr != "" {
-				defaultconf.Http_addr = p.Http_addr
+				defaultConf.Http_addr = p.Http_addr
 			}
 			if p.Log_errlogpath != "" {
-				defaultconf.Log_errlogpath = p.Log_errlogpath
+				defaultConf.Log_errlogpath = p.Log_errlogpath
 			}
 			if p.Log_maxsbackup != 0 {
-				defaultconf.Log_maxsbackup = p.Log_maxsbackup
+				defaultConf.Log_maxsbackup = p.Log_maxsbackup
 			}
 			if p.Log_maxsize != 0 {
-				defaultconf.Log_maxsize = p.Log_maxsize
+				defaultConf.Log_maxsize = p.Log_maxsize
 			}
 			if p.Log_maxage != 0 {
-				defaultconf.Log_maxage = p.Log_maxage
+				defaultConf.Log_maxage = p.Log_maxage
 			}
-			defaultconf.Log_loglevel = p.Log_loglevel
-			defaultconf.Headers = p.Headers
+			defaultConf.Log_loglevel = p.Log_loglevel
+			defaultConf.Headers = p.Headers
 			if p.Asyn_routine != 0 {
-				defaultconf.Asyn_routine = p.Asyn_routine
+				defaultConf.Asyn_routine = p.Asyn_routine
 			}
 			if p.Asyn_mqlen != 0 {
-				defaultconf.Asyn_mqlen = p.Asyn_mqlen
+				defaultConf.Asyn_mqlen = p.Asyn_mqlen
 			}
 			if p.Http_socketTimeOut > 0 {
-				defaultconf.Http_socketTimeOut = p.Http_socketTimeOut
+				defaultConf.Http_socketTimeOut = p.Http_socketTimeOut
 			}
 			//根据这个初始化 confins。
-			confIns.EventlogConfig.EventSendEnable = defaultconf.EventSendEnable
-			confIns.EventlogConfig.LogLevel = defaultconf.Log_loglevel
-			confIns.EventlogConfig.ErrPath = defaultconf.Log_errlogpath
-			confIns.EventlogConfig.Path = defaultconf.Log_path
-			confIns.EventlogConfig.MaxAge = int(defaultconf.Log_maxage)
-			confIns.EventlogConfig.MaxBackups = int(defaultconf.Log_maxsbackup)
-			confIns.EventlogConfig.MaxSize = int(defaultconf.Log_maxsize)
+			confIns.FileConfig.EventSendEnable = defaultConf.EventSendEnable
+			confIns.SdkConfig.LogLevel = defaultConf.Log_loglevel
+			confIns.FileConfig.ErrPath = defaultConf.Log_errlogpath
+			confIns.FileConfig.Path = defaultConf.Log_path
+			confIns.FileConfig.MaxAge = int(defaultConf.Log_maxage)
+			confIns.FileConfig.MaxBackup = int(defaultConf.Log_maxsbackup)
+			confIns.FileConfig.MaxSize = int(defaultConf.Log_maxsize)
 
-			confIns.HttpConfig.HttpAddr = defaultconf.Http_addr
-			confIns.HttpConfig.SocketTimeOut = defaultconf.Http_socketTimeOut
+			confIns.HttpConfig.HttpAddr = defaultConf.Http_addr
+			confIns.HttpConfig.SocketTimeOut = defaultConf.Http_socketTimeOut
 
-			confIns.Asynconf.Routine = int(defaultconf.Asyn_routine)
-			confIns.Asynconf.Mqlen = int(defaultconf.Asyn_mqlen)
-
-			if isInit {
-				if a, err := json.Marshal(confIns); a != nil {
-					debug("初始化默认配置 :" + string(a))
-				} else {
-					fatal("初始化默认配置error : " + err.Error())
-					return err
-				}
-			} else {
-				if a, err := json.Marshal(confIns); a != nil {
-					debug("自定义 Prooerty 配置 :" + string(a))
-				} else {
-					fatal("自定义 Prooerty 配置 error : " + err.Error())
-					return err
-				}
-				isFirstConfByProperty = false
-			}
+			confIns.AsynConfig.Routine = int(defaultConf.Asyn_routine)
+			confIns.AsynConfig.QueueSize = int(defaultConf.Asyn_mqlen)
 
 			//初始化其他参数
 			if p.Headers != nil {
@@ -295,42 +442,34 @@ func InitByProperty(p *Property) error {
 				if headers == nil {
 					headers = map[string]interface{}{}
 				}
-				for k,v:= range p.Headers{
-					headers[k] = v;
+				for k, v := range p.Headers {
+					headers[k] = v
 				}
 			}
-			newLog()
-			appcollector = newMcsCollector(confIns.HttpConfig.HttpAddr + "/sdk/log")
+			initEnvMode()
+			initFile()
+			initLogLevel()
+			appCollector = newMcsCollector()
 			timezone = getTimezone()
-			loglevel, _ = strconv.Atoi(strings.ToUpper(confIns.EventlogConfig.LogLevel))
+			initAsyn()
+			initBatch()
+			initHook()
 
-			switch strings.ToUpper(confIns.EventlogConfig.LogLevel) {
-			case "TRACE":
-				loglevel = 0
-				break
-			case "DEBUG":
-				loglevel = 1
-				break
-			case "INFO":
-				loglevel = 2
-				break
-			case "WARN":
-				loglevel = 3
-				break
-			case "ERROR":
-				loglevel = 5
-				break
-			case "FATAL":
-				loglevel = 6
-				break
-			default:
-				warn("loglevel 没有设置，默认为 0")
+			if a, err := json.Marshal(confIns); a != nil {
+				debug("user config :" + string(a))
+				println("user config :" + string(a))
+			} else {
+				fatal("user config error : " + err.Error())
+				return err
 			}
+			isInit = true
 		}
 	}
 	return nil
 }
 
+// Property
+//Deprecated: instead of using SysConf
 type Property struct {
 	//Log_islog          bool
 	//Log_iscollect      bool
@@ -348,22 +487,57 @@ type Property struct {
 	Asyn_mqlen         uint32
 }
 
-//不初始化 按照默认配置走。
-func init() {
-	defaultconf = &Property{
-		EventSendEnable:    true,
-		Log_path:           "sdklogs/sensors",
-		Log_errlogpath:     "sdklogs/errlog",
-		Log_loglevel:       "debug",
-		Log_maxage:         60,
-		Log_maxsize:        10,
-		Log_maxsbackup:     10,
-		Http_addr:          "http://default_http_addr",
-		Http_socketTimeOut: 30,
-		Headers:            map[string]interface{}{"host": "snssdk.vpc.com","User-Agent":"GoSDK"},
-		Asyn_mqlen:         200000,
-		Asyn_routine:       1024,
+func initHook() {
+	info("init hook")
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
+	go func() {
+		select {
+		case sig := <-c:
+			{
+				length := len(mq.queue)
+				info(fmt.Sprintf("try to handle queue before shutdown, length: %d", length))
+				for len(mq.queue) != 0 {
+					instance.Send()
+				}
+				println(fmt.Sprintf("sig: %s", sig))
+				os.Exit(1)
+			}
+		}
+
+	}()
+}
+
+func initBatch() {
+	if !confIns.BatchConfig.Enable {
+		return
 	}
-	InitByProperty(defaultconf)
-	isInit = false
+	if confIns.BatchConfig.Size < 1 {
+		confIns.BatchConfig.Size = DEFAULT_BATCH_SIZE
+	}
+	if confIns.BatchConfig.WaitTimeMs < 1 {
+		confIns.BatchConfig.WaitTimeMs = DEFAULT_BATCH_WAIT_TIME_MS
+	}
+}
+
+func initEnvMode() {
+	if confIns.SdkConfig.Env == "" {
+		confIns.SdkConfig.Env = ENV_PRI
+	}
+	confIns.SdkConfig.Env = strings.ToLower(confIns.SdkConfig.Env)
+	if sasSDomainUrls[confIns.HttpConfig.HttpAddr] {
+		confIns.SdkConfig.Env = ENV_SAAS
+	} else if sasSNativeDomainUrls[confIns.HttpConfig.HttpAddr] {
+		confIns.SdkConfig.Env = ENV_SAAS_NATIVE
+	}
+
+	// mode
+	if confIns.SdkConfig.Mode == "" {
+		if confIns.FileConfig.EventSendEnable {
+			confIns.SdkConfig.Mode = MODE_HTTP
+		} else {
+			confIns.SdkConfig.Mode = MODE_FILE
+		}
+	}
+	confIns.SdkConfig.Mode = strings.ToLower(confIns.SdkConfig.Mode)
 }
