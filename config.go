@@ -61,7 +61,7 @@ const (
 	ITEM_MESSAGE  string = "ITEM"
 
 	DATE_TIME_LAYOUT string = "2006-01-02 15:04:05"
-	SDK_VERSION      string = "datarangers_sdk_go_v1.1.1"
+	SDK_VERSION      string = "datarangers_sdk_go_v1.1.2"
 
 	ENV_PRI         string = "pri"
 	ENV_SAAS        string = "saas"
@@ -501,7 +501,7 @@ func initHook() {
 					instance.Send()
 				}
 				println(fmt.Sprintf("sig: %s", sig))
-				os.Exit(1)
+				return
 			}
 		}
 
