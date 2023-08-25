@@ -65,6 +65,7 @@ type Header struct {
 	TzName             *string                `json:"tz_name,omitempty"`
 	Udid               *string                `json:"udid,omitempty"`
 	UserUniqueId       *string                `json:"user_unique_id,omitempty"`
+	clientIp           *string                `json:"client_ip,omitempty"`
 }
 
 type TimeSync struct {
