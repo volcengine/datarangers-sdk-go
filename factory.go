@@ -79,7 +79,7 @@ func CreateSaasNativeAppMessage(ssem ServerSdkEventMessage) *ServerSdkEventMessa
 }
 
 func CreateSaasNativeAppMessages(ssems []interface{}) []*ServerSdkEventMessage {
-	snams := make([]*ServerSdkEventMessage, len(ssems))
+	snams := make([]*ServerSdkEventMessage, 0)
 	for index, _ := range ssems {
 		ssem := ssems[index].(*ServerSdkEventMessage)
 		snams = append(snams, CreateSaasNativeAppMessage(*ssem))
