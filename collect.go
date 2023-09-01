@@ -363,7 +363,7 @@ func getServerSdkEventWithAbMessage(appid int64, uuid string, abSdkVersionList [
 		itm := &EventV3{
 			Datetime:    PtrString(timeObj.Format(DATE_TIME_LAYOUT)),
 			Event:       eventname,
-			LocalTimeMs: PtrInt64(time.Now().UnixMicro()),
+			LocalTimeMs: PtrInt64(time.Now().UnixMilli()),
 			Params:      eventParam[i],
 		}
 		if abSdkVersionList != nil {

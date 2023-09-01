@@ -223,3 +223,62 @@ func (example *SDKExample) SendEventInfoWithHeader() {
 	}
 	sdk.SendEventWithHeader(sdk.APP, appId, hd, eventV3)
 }
+
+func (example *SDKExample) SendEventInfoPresetCommonParams() {
+	appId := example.AppId
+	did := example.Did
+	uuid := example.Uuid
+	// 事件公共属性
+	custom := map[string]interface{}{
+		"common_param_1": "value_1",
+	}
+	hd := &sdk.Header{
+		Aid:                     &appId,
+		Custom:                  custom,
+		DeviceId:                did,
+		UserUniqueId:            &uuid,
+		LatestReferrer:          sdk.PtrString("https://www.toutiao.com/article/7119336107199693345/"),
+		LatestReferrerHost:      sdk.PtrString("www.toutiao.com"),
+		DeviceManufacturer:      sdk.PtrString("huawei"),
+		Height:                  sdk.PtrString("10px"),
+		Width:                   sdk.PtrString("12px"),
+		LatestSearchKeyword:     sdk.PtrString("search"),
+		LatestTrafficSourceType: sdk.PtrString("source"),
+		UserUniqueIdType:        sdk.PtrString("type"),
+		AppChannel:              sdk.PtrString("华为应用市场"),
+		AppRegion:               sdk.PtrString("cn"),
+		Region:                  sdk.PtrString("CN.r"),
+		AppVersion:              sdk.PtrString("6.14.2"),
+		AppVersionMinor:         sdk.PtrString("6"),
+		DeviceModel:             sdk.PtrString("iphone 10 pro Max"),
+		OsName:                  sdk.PtrString("ios"),
+		OsVersion:               sdk.PtrString("2.0.0"),
+		SdkVersion:              sdk.PtrString("6.14.1"),
+		SdkLib:                  sdk.PtrString("java"),
+		ClientIp:                sdk.PtrString("10.10.0.1"),
+		NetworkType:             sdk.PtrString("5G"),
+		Carrier:                 sdk.PtrString("中国电信"),
+		Resolution:              sdk.PtrString("1080*1080"),
+		AppLanguage:             sdk.PtrString("XH"),
+		Platform:                sdk.PtrString("android"),
+		Browser:                 sdk.PtrString("qq"),
+		BrowserVersion:          sdk.PtrString("1.9"),
+		Package:                 sdk.PtrString("com.volcengine"),
+		AppPackage:              sdk.PtrString("com.volcengine.app"),
+		DeviceBrand:             sdk.PtrString("huawei"),
+		Access:                  sdk.PtrString("wifi"),
+	}
+	// 事件发生时间
+	localTimeMs1 := time.Now().UnixMilli()
+	// 事件属性
+	eventParams := map[string]interface{}{
+		"param1": "value1",
+	}
+	eventV3 := &sdk.EventV3{
+		Event:        "go_sdk_send_with_preset_common_params", //
+		LocalTimeMs:  &localTimeMs1,
+		AbSdkVersion: &[]string{"11,12"}[0],
+		Params:       eventParams,
+	}
+	sdk.SendEventWithHeader(sdk.APP, appId, hd, eventV3)
+}

@@ -259,6 +259,7 @@ func (p *execPool) Send() {
 				errFileWriter.Println(string(ans))
 			}
 		}
+		return
 	}
 	dmg := mq.pop()
 	err := appCollector.send(dmg)
