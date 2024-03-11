@@ -67,12 +67,17 @@ const (
 	ENV_SAAS        string = "saas"
 	ENV_SAAS_NATIVE string = "saas_native"
 
-	MODE_HTTP string = "http"
-	MODE_FILE string = "file"
+	MODE_HTTP  string = "http"
+	MODE_FILE  string = "file"
+	MODE_KAFKA string = "kafka"
 
 	MESSAGE_EVENT string = "event"
 	MESSAGE_USER  string = "user"
 	MESSAGE_ITEM  string = "item"
+
+	SOURCE__KAFKA_SDK_SERVER string = "sdk_server"
+
+	KAFAKA_TOPIC string = "sdk_origin_event"
 )
 
 const (
@@ -147,14 +152,17 @@ var (
 )
 
 type SysConf struct {
-	SdkConfig     SdkConfig        `yaml:"sdk"`
-	BatchConfig   BatchConfig      `yaml:"batch"`
-	FileConfig    FileConfig       `yaml:"file"`
-	HttpConfig    HttpConfig       `yaml:"http"`
-	AsynConfig    AsynConfig       `yaml:"asyn"`
-	OpenapiConfig OpenapiConfig    `yaml:"openapi"`
-	VerifyConfig  VerifyConfig     `yaml:"verify"`
-	AppKeys       map[int64]string `yaml:"appKeys"`
+	SdkConfig            SdkConfig                                 `yaml:"sdk"`
+	BatchConfig          BatchConfig                               `yaml:"batch"`
+	FileConfig           FileConfig                                `yaml:"file"`
+	HttpConfig           HttpConfig                                `yaml:"http"`
+	AsynConfig           AsynConfig                                `yaml:"asyn"`
+	OpenapiConfig        OpenapiConfig                             `yaml:"openapi"`
+	VerifyConfig         VerifyConfig                              `yaml:"verify"`
+	KafkaConfig          *KafkaConfig                              `yaml:"kafka"`
+	AppKeys              map[int64]string                          `yaml:"appKeys"`
+	AlwaysWriteToErrFile bool                                      `yaml:"always_write_to_err_file"`
+	ErrHandler           func(dmgs []interface{}, err error) error `json:"-"`
 }
 
 type BatchConfig struct {
@@ -197,6 +205,38 @@ type OpenapiConfig struct {
 
 type VerifyConfig struct {
 	Url string `yaml:"url"`
+}
+
+type KafkaConfig struct {
+	Topic        string   `yaml:"topic"`         // 生产者topic
+	KafkaBrokers []string `yaml:"kafka_brokers"` // 指定kafka的brokers，格式为ip:port
+
+	KafkaSaslType            int64              `yaml:"sasl_type"` // 鉴权模式，1：plain text，2：kerberos，其余值表示不鉴权
+	KafkaSaslUser            string             `yaml:"sasl_user"`
+	KafkaSaslPassword        string             `yaml:"sasl_password"`
+	GssApiPrincipal          string             `yaml:"gss_api_principal"`
+	GssApiKerberosConfigPath string             `yaml:"gss_api_kerberos_config_path"`
+	GssApiKeyTabPath         string             `yaml:"gss_api_key_tab_path"`
+	GssApiRealm              string             `yaml:"gss_api_realm"`
+	GssApiServiceName        string             `yaml:"gss_api_service_name"`
+	KafkaProducerConf        *KafkaProducerConf `yaml:"sync_kafka_producer_conf"` // 生产者配置
+}
+
+type KafkaProducerConf struct {
+	RequiredAcks int16                   `yaml:"required_acks"` // 同步模式，-1：等待所有副本 0：等待本地
+	RetryConfig  *KafkaProducerRetryConf `yaml:"retry_config"`  // 生产者重试配置
+	FlushConfig  *KafkaProducerFlushConf `yaml:"flush_config"`  // 生产者攒批配置
+}
+
+type KafkaProducerRetryConf struct {
+	Max int `yaml:"max"` // 最大重试次数
+}
+
+type KafkaProducerFlushConf struct {
+	Bytes       int   `yaml:"bytes"`        //超过字节数强制flush
+	Messages    int   `yaml:"messages"`     //超过消息数强制flush
+	FrequencyMs int64 `yaml:"frequency_ms"` //超过一段时间强制flush
+	MaxMessages int   `yaml:"max_messages"` //缓冲区最大消息数
 }
 
 func initFile() {
