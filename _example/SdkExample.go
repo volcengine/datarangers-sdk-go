@@ -282,3 +282,32 @@ func (example *SDKExample) SendEventInfoPresetCommonParams() {
 	}
 	sdk.SendEventWithHeader(sdk.APP, appId, hd, eventV3)
 }
+
+func (example *SDKExample) SendUserUniqueIdType(userUniqueIdType string) {
+	appId := example.AppId
+	did := example.Did
+	uuid := example.Uuid
+	// 事件公共属性
+	custom := map[string]interface{}{
+		"common_param_1": "value_1",
+	}
+	hd := &sdk.Header{
+		Aid:              &appId,
+		Custom:           custom,
+		DeviceId:         did,
+		UserUniqueId:     &uuid,
+		UserUniqueIdType: sdk.PtrString(userUniqueIdType),
+	}
+	// 事件发生时间
+	localTimeMs1 := time.Now().UnixMilli()
+	// 事件属性
+	eventParams := map[string]interface{}{
+		"param1": "value1",
+	}
+	eventV3 := &sdk.EventV3{
+		Event:       "go_sdk_send_user_unique_id_type", //
+		LocalTimeMs: &localTimeMs1,
+		Params:      eventParams,
+	}
+	sdk.SendEventWithHeader(sdk.APP, appId, hd, eventV3)
+}

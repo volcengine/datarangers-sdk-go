@@ -250,22 +250,34 @@ func (p *execPool) exec() {
 	}
 }
 
+func (p *execPool) handleErr(dmgs []interface{}, sendErr error) {
+	if confIns.ErrHandler != nil {
+		err := confIns.ErrHandler(dmgs, sendErr)
+		if err != nil {
+			fatal(fmt.Sprintf("call ErrHandler failed, error: %v", err))
+		}
+	}
+
+	if confIns.ErrHandler == nil || confIns.AlwaysWriteToErrFile {
+		for _, dmg := range dmgs {
+			ans, _ := json.Marshal(dmg)
+			errFileWriter.Println(string(ans))
+		}
+	}
+}
+
 func (p *execPool) Send() {
 	if confIns.BatchConfig.Enable {
 		dmgs, err := p.doSendBatch()
 		if err != nil {
-			for _, dmg := range dmgs {
-				ans, _ := json.Marshal(dmg)
-				errFileWriter.Println(string(ans))
-			}
+			p.handleErr(dmgs, err)
 		}
 		return
 	}
 	dmg := mq.pop()
 	err := appCollector.send(dmg)
 	if err != nil {
-		ans, _ := json.Marshal(dmg)
-		errFileWriter.Println(string(ans))
+		p.handleErr([]interface{}{dmg}, err)
 	}
 }
 
