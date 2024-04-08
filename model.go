@@ -29,6 +29,7 @@ type ServerSdkEventMessage struct {
 }
 
 type Header struct {
+	Source                  *string                `json:"__source,omitempty"`
 	Aid                     *int64                 `json:"aid,omitempty"`
 	AppLanguage             *string                `json:"app_language,omitempty"`
 	AppName                 *string                `json:"app_name,omitempty"`
@@ -75,7 +76,7 @@ type Header struct {
 	Width                   *string                `json:"width,omitempty"`
 	LatestSearchKeyword     *string                `json:"$latest_search_keyword,omitempty"`
 	LatestTrafficSourceType *string                `json:"$latest_traffic_source_type,omitempty"`
-	UserUniqueIdType        *string                `json:"$user_unique_id_type,omitempty"`
+	UserUniqueIdType        *string                `json:"user_unique_id_type,omitempty"`
 	AppChannel              *string                `json:"app_channel,omitempty"`
 	NetworkType             *string                `json:"network_type,omitempty"`
 	NetworkCarrier          *string                `json:"network_carrier,omitempty"`

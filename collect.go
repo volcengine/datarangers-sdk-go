@@ -28,12 +28,32 @@ const PATH_USER_ATTR = "/dataprofile/openapi/v1/%d/users/%s/attributes"
 const PATH_ITEM_ATTR = "/dataprofile/openapi/v1/%d/items/%s/%s/attributes"
 
 type mcsCollector struct {
-	mscHttpClient *http.Client
+	mscHttpClient     *http.Client
+	syncKafkaProducer *SyncKafkaProducer
+}
+
+func (m mcsCollector) close() {
+	if confIns.SdkConfig.Mode == MODE_KAFKA && m.syncKafkaProducer != nil {
+		err := m.syncKafkaProducer.Close()
+		if err != nil {
+			fatal(fmt.Sprintf("close syncKafkaProducer failed, error: %v", err))
+			return
+		}
+		info("syncKafkaProducer closed")
+	}
 }
 
 func newMcsCollector() (collector *mcsCollector) {
-	collector = &mcsCollector{
-		mscHttpClient: &http.Client{
+	var syncKafkaProducer *SyncKafkaProducer
+	var mscHttpClient *http.Client
+	var err error
+	if confIns.SdkConfig.Mode == MODE_KAFKA {
+		syncKafkaProducer, err = NewSyncKafkaProducer(confIns.KafkaConfig)
+		if err != nil {
+			panic("init kafka producer failed" + err.Error())
+		}
+	} else {
+		mscHttpClient = &http.Client{
 			Transport: &http.Transport{
 				Dial: func(network, addr string) (net.Conn, error) {
 					return net.DialTimeout(network, addr, time.Duration(confIns.HttpConfig.SocketTimeOut)*time.Second)
@@ -43,7 +63,12 @@ func newMcsCollector() (collector *mcsCollector) {
 				MaxIdleConns:        maxIdleConnsPerHost,
 			},
 			Timeout: time.Duration(confIns.HttpConfig.SocketTimeOut) * time.Second,
-		},
+		}
+	}
+
+	collector = &mcsCollector{
+		mscHttpClient:     mscHttpClient,
+		syncKafkaProducer: syncKafkaProducer,
 	}
 	return
 }
@@ -62,6 +87,18 @@ func (p *mcsCollector) sendBatch(dmsgs []interface{}) error {
 			break
 		case ENV_SAAS_NATIVE:
 			err = p.saasNativeSendEventBatch(dmsgs)
+			break
+		default:
+			fatal(fmt.Sprintf("not support env: %s", confIns.SdkConfig.Env))
+			return fmt.Errorf("not support env: %s", confIns.SdkConfig.Env)
+		}
+
+		return err
+	} else if MODE_KAFKA == confIns.SdkConfig.Mode {
+		// kafka模式，只支持私部环境
+		switch confIns.SdkConfig.Env {
+		case ENV_PRI:
+			err = p.priSendEventKafkaBatch(dmsgs)
 			break
 		default:
 			fatal(fmt.Sprintf("not support env: %s", confIns.SdkConfig.Env))
@@ -104,6 +141,18 @@ func (p *mcsCollector) send(dmsg interface{}) error {
 		}
 
 		return err
+	} else if MODE_KAFKA == confIns.SdkConfig.Mode {
+		// kafka模式，只支持私部环境
+		switch confIns.SdkConfig.Env {
+		case ENV_PRI:
+			err = p.priSendEventKafka(dmsg)
+			break
+		default:
+			fatal(fmt.Sprintf("not support env: %s", confIns.SdkConfig.Env))
+			return fmt.Errorf("not support env: %s", confIns.SdkConfig.Env)
+		}
+
+		return err
 	}
 	//其余的不支持
 	fatal(fmt.Sprintf("not support mode: %s", confIns.SdkConfig.Mode))
@@ -128,6 +177,14 @@ func (p *mcsCollector) priSendEventBatch(dmsg []interface{}) error {
 	}
 	url := confIns.HttpConfig.HttpAddr + PATH_SDK_LIST
 	return p.request("POST", url, data, nil)
+}
+
+func (p *mcsCollector) priSendEventKafkaBatch(dmsg []interface{}) error {
+	return p.syncKafkaProducer.BatchSend(dmsg)
+}
+
+func (p *mcsCollector) priSendEventKafka(dmsg interface{}) error {
+	return p.syncKafkaProducer.Send(dmsg)
 }
 
 func (p *mcsCollector) saasNativeSendEvent(dmsg *ServerSdkEventMessage) error {
@@ -350,6 +407,10 @@ func getServerSdkEventWithAbMessage(appid int64, uuid string, abSdkVersionList [
 		UserUniqueId: &uuid,
 		Timezone:     &timezone,
 	}
+	if confIns.SdkConfig.Mode == MODE_KAFKA {
+		hd.Source = PtrString(SOURCE__KAFKA_SDK_SERVER)
+	}
+
 	appTypeStr := string(appType)
 	dmg := &ServerSdkEventMessage{
 		AppId:        &appid,
@@ -386,6 +447,9 @@ func getEventsWithHeader(appId int64, appType AppType, hd *Header, events []*Eve
 	}
 	if hd.Timezone == nil {
 		hd.Timezone = &timezone
+	}
+	if confIns.SdkConfig.Mode == MODE_KAFKA {
+		hd.Source = PtrString(SOURCE__KAFKA_SDK_SERVER)
 	}
 	for _, eventV3 := range events {
 		if eventV3.LocalTimeMs == nil {

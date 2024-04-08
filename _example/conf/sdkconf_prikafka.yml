@@ -1,0 +1,6 @@
+sdk:
+  mode: kafka
+kafka:
+#  kafka brokers，如果有多个，则配置多个
+  kafka_brokers:
+    - 127.0.0.1:9192
