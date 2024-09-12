@@ -21,7 +21,7 @@ func main() {
 		SdkConfig: sdk.SdkConfig{
 			Mode: sdk.MODE_KAFKA,
 		},
-		// 设置domain和host，这里注意替换成真实的参数
+		// 设置sdk kafka broker 地址，这里注意替换成真实的参数。broker 格式一般为ip:port，比如 127.0.0.1:9192
 		KafkaConfig: &sdk.KafkaConfig{
 			KafkaBrokers: []string{os.Getenv("SDK_KAFKA_BROKER_1"), os.Getenv("SDK_KAFKA_BROKER_2")},
 		},
