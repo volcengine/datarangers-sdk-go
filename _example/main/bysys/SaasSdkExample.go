@@ -23,7 +23,7 @@ func main() {
 		SdkConfig: sdk.SdkConfig{
 			Mode: sdk.MODE_HTTP,
 		},
-		// 设置domain和appKey, 不需要设置HOST
+		// 设置domain和appKey
 		HttpConfig: sdk.HttpConfig{
 			HttpAddr: "https://mcs.ctobsnssdk.com",
 		},

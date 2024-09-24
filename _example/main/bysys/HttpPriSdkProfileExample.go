@@ -21,12 +21,9 @@ func main() {
 		SdkConfig: sdk.SdkConfig{
 			Mode: sdk.MODE_HTTP,
 		},
-		// 设置domain和host，这里注意替换成真实的参数
+		// 设置sdk domain，这里注意替换成真实的参数
 		HttpConfig: sdk.HttpConfig{
 			HttpAddr: os.Getenv("SDK_DOMAIN"),
-			Headers: map[string]interface{}{
-				"Host": os.Getenv("SDK_HOST"),
-			},
 		},
 	})
 

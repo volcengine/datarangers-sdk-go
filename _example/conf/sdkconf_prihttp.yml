@@ -3,8 +3,6 @@ sdk:
 #  logLevel: debug
 http:
   addr: ${SDK_DOMAIN} #上报的IP 或 域名，注意加上 http://，或者https://
-  headers:
-    Host: ${SDK_HOST} # host，私有化环境Host的配置在安装部署的那台机器上，查看/home/datarangers/DataRangersDeploy/conf_rangers.yml中配置项sdk.report.host
 #  timeout: 30 # secenods
 #asyn:
 #  routine: 20   #建议小于1024，并发数目

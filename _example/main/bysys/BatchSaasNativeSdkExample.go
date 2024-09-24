@@ -24,7 +24,7 @@ func main() {
 			Mode: sdk.MODE_HTTP,
 			Env:  sdk.ENV_SAAS_NATIVE,
 		},
-		// 设置domain和appKey, 不需要设置HOST
+		// 设置domain和appKey
 		HttpConfig: sdk.HttpConfig{
 			HttpAddr: "https://gator.volces.com",
 		},
