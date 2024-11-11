@@ -206,7 +206,30 @@ func (p *mcsCollector) saasNativeSendEvent(dmsg *ServerSdkEventMessage) error {
 }
 
 func (p *mcsCollector) saasNativeSendEventBatch(dmsgs []interface{}) error {
-	dmsg := dmsgs[0].(*ServerSdkEventMessage)
+	// 根据appId 进行group by
+	ssemMap := make(map[int64][]*ServerSdkEventMessage)
+	for _, dmsg := range dmsgs {
+		ssem := dmsg.(*ServerSdkEventMessage)
+		ssemList, ok := ssemMap[*ssem.AppId]
+		if !ok {
+			ssemList = make([]*ServerSdkEventMessage, 0)
+		}
+		ssemList = append(ssemList, ssem)
+		ssemMap[*ssem.AppId] = ssemList
+	}
+
+	// 处理
+	for _, ssemList := range ssemMap {
+		err := p.doSaasNativeSendEventBatch(ssemList)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *mcsCollector) doSaasNativeSendEventBatch(dmsgs []*ServerSdkEventMessage) error {
+	dmsg := dmsgs[0]
 	appKey, ok := confIns.AppKeys[*dmsg.AppId]
 	if !ok {
 		panic("App key cannot be empty. appId: " + strconv.Itoa(int(*dmsg.AppId)))
