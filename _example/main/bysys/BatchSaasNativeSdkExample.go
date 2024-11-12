@@ -18,6 +18,7 @@ import (
 func main() {
 	// 初始化
 	appId, _ := strconv.Atoi(os.Getenv("SDK_APP_1"))
+	appId2, _ := strconv.Atoi(os.Getenv("SDK_APP_2"))
 	sdk.InitBySysConf(&sdk.SysConf{
 		// 设置模式
 		SdkConfig: sdk.SdkConfig{
@@ -30,7 +31,8 @@ func main() {
 		},
 		// 可以设置多个app，这里注意替换成真实的参数
 		AppKeys: map[int64]string{
-			int64(appId): os.Getenv("SDK_APP_KEY_1"),
+			int64(appId):  os.Getenv("SDK_APP_KEY_1"),
+			int64(appId2): os.Getenv("SDK_APP_KEY_2"),
 		},
 		// 设置batch
 		BatchConfig: sdk.BatchConfig{
@@ -46,7 +48,12 @@ func main() {
 
 	sdkExample := m.SDKExample{
 		AppId: int64(appId),
-		Uuid:  "test_go_sdk_user111",
+		Uuid:  "test_go_sdk_user333",
+	}
+
+	sdkExample2 := m.SDKExample{
+		AppId: int64(appId2),
+		Uuid:  "test_go_sdk_user444",
 	}
 
 	// 上报事件
@@ -55,6 +62,12 @@ func main() {
 		sdkExample.SendEventInfos()
 		sdkExample.SendEventInfoWithHeader()
 		sdkExample.SendEventInfoPresetCommonParams()
+
+		sdkExample2.SendEventInfo()
+		sdkExample2.SendEventInfos()
+		sdkExample2.SendEventInfoWithHeader()
+		sdkExample2.SendEventInfoPresetCommonParams()
+
 	}
 	sdkExample.SendEventInfo()
 	sdkExample.SendEventInfos()
@@ -69,6 +82,20 @@ func main() {
 
 	// 创建完成之后，再在事件中上报关联的item
 	sdkExample.SendEventWithItem()
+
+	sdkExample2.SendEventInfo()
+	sdkExample2.SendEventInfos()
+	sdkExample2.SendEventInfoWithHeader()
+	sdkExample2.SendEventInfoPresetCommonParams()
+
+	//上报用户属性，需要保证先在系统新增用户属性
+	sdkExample2.SetProfile()
+
+	//item 需要先在管理页面进行创建
+	sdkExample2.SetItem()
+
+	// 创建完成之后，再在事件中上报关联的item
+	sdkExample2.SendEventWithItem()
 
 	// 避免程序立刻退出
 	time.Sleep(60 * time.Second)
