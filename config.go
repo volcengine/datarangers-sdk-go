@@ -130,7 +130,7 @@ var (
 
 	profileOperationMap = map[string]string{
 		string(SET):        "SET",
-		string(SET_ONCE):   "SET_ONE",
+		string(SET_ONCE):   "SET_ONCE",
 		string(APPEND):     "APPEND",
 		string(INCREAMENT): "INCREASE",
 		string(UNSET):      "UNSET",

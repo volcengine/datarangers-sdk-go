@@ -52,6 +52,12 @@ func main() {
 	//上报用户属性，需要保证先在系统新增用户属性
 	sdkExample.SetProfile()
 
+	// 用户属性其他操作
+	sdkExample.IncProfile()
+	sdkExample.AppendProfile()
+	sdkExample.UnSetProfile()
+	sdkExample.SetOnceProfile()
+
 	//item 需要先在管理页面进行创建
 	sdkExample.SetItem()
 

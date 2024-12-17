@@ -100,11 +100,55 @@ func (example *SDKExample) SetProfile() {
 	appId := example.AppId
 	uuid := example.Uuid
 	properties := map[string]interface{}{
-		"list":      []string{"a"},
-		"profile_a": "param_11",
+		"list":               []string{"a"},
+		"profile_a":          "param_11",
+		"un_set_list":        "value1",
+		"un_set_profile_a":   "value2",
+		"set_once_list":      []string{"set_a"},
+		"set_once_profile_a": "set_param_11",
 	}
 
 	sdk.ProfileSet(sdk.APP, appId, uuid, properties)
+}
+
+func (example *SDKExample) SetOnceProfile() {
+	appId := example.AppId
+	uuid := example.Uuid
+	properties := map[string]interface{}{
+		"set_once_list":      []string{"set_once_a"},
+		"set_once_profile_a": "set_once_param_11",
+		"set_once_profile_b": "set_once_param_12",
+	}
+
+	sdk.ProfileSetOnce(sdk.APP, appId, uuid, properties)
+}
+
+func (example *SDKExample) UnSetProfile() {
+	appId := example.AppId
+	uuid := example.Uuid
+	properties := []string{"un_set_list", "un_set_profile_a"}
+
+	sdk.ProfileUnset(sdk.APP, appId, uuid, properties)
+}
+
+func (example *SDKExample) AppendProfile() {
+	appId := example.AppId
+	uuid := example.Uuid
+	properties := map[string]interface{}{
+		"list": []string{"b"},
+	}
+
+	sdk.ProfileAppend(sdk.APP, appId, uuid, properties)
+}
+
+func (example *SDKExample) IncProfile() {
+	appId := example.AppId
+	uuid := example.Uuid
+	properties := map[string]interface{}{
+		"profile_int": 3,
+	}
+
+	sdk.ProfileIncrement(sdk.APP, appId, uuid, properties)
 }
 
 func (example *SDKExample) SetItem() {
