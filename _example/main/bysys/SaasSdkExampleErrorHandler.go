@@ -41,9 +41,11 @@ func main() {
 		// 设置错误处理函数
 		ErrHandler: func(dmgs []interface{}, err error) error {
 			println("err_handle, error: " + err.Error())
-			data, _ := json.Marshal(dmgs)
-			println("err_handle, dmgs: " + string(data))
-			return err
+			data, jsonErr := json.Marshal(dmgs)
+			if jsonErr != nil {
+				println("err_handle, dmgs: " + string(data))
+			}
+			return jsonErr
 		},
 	})
 
