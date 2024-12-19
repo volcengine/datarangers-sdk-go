@@ -8,6 +8,7 @@
 package main
 
 import (
+	"encoding/json"
 	sdk "github.com/volcengine/datarangers-sdk-go"
 	m "github.com/volcengine/datarangers-sdk-go/_example"
 	"os"
@@ -37,6 +38,15 @@ func main() {
 			Ak:       os.Getenv("OPENAPI_AK"),
 			Sk:       os.Getenv("OPENAPI_SK"),
 		},
+		// 设置错误处理函数
+		ErrHandler: func(dmgs []interface{}, err error) error {
+			println("err_handle, error: " + err.Error())
+			data, jsonErr := json.Marshal(dmgs)
+			if jsonErr != nil {
+				println("err_handle, dmgs: " + string(data))
+			}
+			return jsonErr
+		},
 	})
 
 	sdkExample := m.SDKExample{
@@ -46,23 +56,9 @@ func main() {
 
 	// 上报事件
 	sdkExample.SendEventInfo()
-	sdkExample.SendEventInfos()
-	sdkExample.SendEventInfoWithHeader()
 
 	//上报用户属性，需要保证先在系统新增用户属性
 	sdkExample.SetProfile()
-
-	// 用户属性其他操作
-	sdkExample.IncProfile()
-	sdkExample.AppendProfile()
-	sdkExample.UnSetProfile()
-	sdkExample.SetOnceProfile()
-
-	//item 需要先在管理页面进行创建
-	sdkExample.SetItem()
-
-	// 创建完成之后，再在事件中上报关联的item
-	sdkExample.SendEventWithItem()
 
 	// 避免程序立刻退出
 	time.Sleep(60 * time.Second)
