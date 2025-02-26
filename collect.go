@@ -370,7 +370,7 @@ func (p *mcsCollector) request(method string, url string, data []byte, customHea
 		defer resp.Body.Close()
 	}
 	if err != nil {
-		warn(err.Error() + "    send error, will retry again")
+		fatal(err.Error() + "    send error, will retry again")
 		resp, err = p.mscHttpClient.Do(req)
 		if resp != nil && resp.Body != nil {
 			defer resp.Body.Close()
