@@ -193,8 +193,9 @@ type HttpConfig struct {
 }
 
 type AsynConfig struct {
-	Routine   int `yaml:"routine"`
-	QueueSize int `yaml:"queueSize"`
+	Routine     int   `yaml:"routine"`
+	QueueSize   int   `yaml:"queueSize"`
+	WaitTimeout int64 `yaml:"waitTimeout"` // 队列满的时候等待时间，单位是毫秒
 }
 
 type OpenapiConfig struct {

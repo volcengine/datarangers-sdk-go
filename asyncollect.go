@@ -250,7 +250,7 @@ func (p *execPool) exec() {
 	}
 }
 
-func (p *execPool) handleErr(dmgs []interface{}, sendErr error) {
+func handleErr(dmgs []interface{}, sendErr error) {
 	if confIns.ErrHandler != nil {
 		err := confIns.ErrHandler(dmgs, sendErr)
 		if err != nil {
@@ -270,14 +270,14 @@ func (p *execPool) Send() {
 	if confIns.BatchConfig.Enable {
 		dmgs, err := p.doSendBatch()
 		if err != nil {
-			p.handleErr(dmgs, err)
+			handleErr(dmgs, err)
 		}
 		return
 	}
 	dmg := mq.pop()
 	err := appCollector.send(dmg)
 	if err != nil {
-		p.handleErr([]interface{}{dmg}, err)
+		handleErr([]interface{}{dmg}, err)
 	}
 }
 

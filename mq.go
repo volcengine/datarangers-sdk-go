@@ -7,7 +7,11 @@
 
 package datarangers_sdk
 
-import "time"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 type messageQueue struct {
 	queue chan interface{}
@@ -21,7 +25,22 @@ func newMq() *messageQueue {
 }
 
 func (q *messageQueue) push(dmg interface{}) {
-	q.queue <- dmg
+	if confIns.AsynConfig.WaitTimeout > 0 {
+		waitTimeout := time.Duration(confIns.AsynConfig.WaitTimeout)
+		select {
+		case q.queue <- dmg:
+			// 数据发送成功
+		case <-time.After(waitTimeout * time.Millisecond):
+			// 发送超时，进行相应处理
+			errMsg := fmt.Sprintf("datarangers send Queue reach max length: %d, and waitTiemout: %dms",
+				confIns.AsynConfig.QueueSize, waitTimeout,
+			)
+			fatal(errMsg)
+			handleErr([]interface{}{dmg}, errors.New(errMsg))
+		}
+	} else {
+		q.queue <- dmg
+	}
 }
 
 func (q *messageQueue) pop() interface{} {
