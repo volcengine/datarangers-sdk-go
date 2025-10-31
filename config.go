@@ -345,7 +345,6 @@ func InitBySysConf(conf *SysConf) error {
 
 		if a, err := json.Marshal(confIns); a != nil {
 			debug("user config :" + string(a))
-			println("user config :" + string(a))
 		} else {
 			panic("user config error : " + err.Error())
 			return err
@@ -390,7 +389,6 @@ func InitByFile(path string) error {
 
 			if a, err := json.Marshal(confIns); a != nil {
 				debug("user config :" + string(a))
-				println("user config :" + string(a))
 			} else {
 				panic("user config error : " + err.Error())
 				return err
@@ -498,7 +496,6 @@ func InitByProperty(p *Property) error {
 
 			if a, err := json.Marshal(confIns); a != nil {
 				debug("user config :" + string(a))
-				println("user config :" + string(a))
 			} else {
 				fatal("user config error : " + err.Error())
 				return err
